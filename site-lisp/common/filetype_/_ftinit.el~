@@ -1,0 +1,69 @@
+
+
+;;; php mode
+(autoload 'php-mode "php-mode" "php mode by Aaron S Hawley." t)
+(add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
+
+;;; javascript. (IDE-like by Steve Yegge. Features a js syntax parser)
+(autoload 'js2-mode "js2-20090723b" "IDE-like Javascript mode; features a on-the-fly syntax parser." t)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+
+;;; visual-basic-mode
+(autoload 'visual-basic-mode "visual-basic-mode" "Visual Basic mode." t)
+(add-to-list 'auto-mode-alist '("\\.vbs\\'" . visual-basic-mode)) ;VBscript
+(add-to-list 'auto-mode-alist '("\\.vb\\'" . visual-basic-mode))  ;visual basic .NET file
+(add-to-list 'auto-mode-alist '("\\.bas\\'" . visual-basic-mode)) ;visual basic form
+(add-to-list 'auto-mode-alist '("\\.frm\\'" . visual-basic-mode)) ;basic language source
+(add-to-list 'auto-mode-alist '("\\.cls\\'" . visual-basic-mode)) ;C++ class definition file
+
+;;; for editing Windows's cmd.exe's script; batch, ¡°.bat¡± file mode.
+(autoload 'dos-mode "dos" "A mode for editing Windows cmd.exe batch scripts." t)
+(add-to-list 'auto-mode-alist '("\\.bat\\'" . dos-mode))
+(add-to-list 'auto-mode-alist '("\\.cmd\\'" . dos-mode))
+
+;;; powershell-mode. http://en.wikipedia.org/wiki/PowerShell
+(autoload 'powershell-mode "powershell-mode" "A editing mode for Microsoft PowerShell." t)
+(add-to-list 'auto-mode-alist '("\\.ps1\\'" . powershell-mode)) ; PowerShell script
+
+;;; powershell interactive shell
+(autoload 'powershell "powershell" "Interactive shell for PowerShell." t)
+
+;;; mode for lua language
+(autoload 'lua-mode "lua-mode" "Lua editing mode." t)
+(add-to-list 'auto-mode-alist '("\\.lua\\'" . lua-mode)) ; lua-mode
+
+;;; xlsl-mode. http://en.wikipedia.org/wiki/Linden_Scripting_Language
+(autoload 'xlsl-mode "xlsl-mode" "Load xlsl-mode for editing Linden Scripting Lang." t)
+(add-to-list 'auto-mode-alist '("\\.lsl\\'" . xlsl-mode))
+
+;;; AutoHotKey (ahk) mode (a keyboard macro for Windows)
+(autoload 'xahk-mode "xahk-mode" "AutoHotKey mode" t)
+(add-to-list 'auto-mode-alist '("\\.ahk\\'" . xahk-mode))
+
+;;; POV-Ray (3D rendering engine) http://en.wikipedia.org/wiki/POV-Ray
+(add-to-list 'load-path
+             (concat (file-name-directory (or load-file-name buffer-file-name)) "../packages/pov-mode-3.2/"))
+(autoload 'pov-mode "pov-mode" "Major mode for working with POV-Ray code." t)
+(add-to-list 'auto-mode-alist '("\\.pov\\'" . pov-mode))
+(add-to-list 'auto-mode-alist '("\\.inc\\'" . pov-mode))
+
+;;; mode for Haskell lang. http://en.wikipedia.org/wiki/Haskell_(programming_language)
+(add-to-list 'load-path
+             (concat (file-name-directory (or load-file-name buffer-file-name)) "../packages/haskell-mode-2.7.0/"))
+(load "haskell-mode-2.7.0/haskell-site-file")
+(add-hook 'haskell-mode-hook 'turn-on-haskell-doc-mode)
+(add-hook 'haskell-mode-hook 'turn-on-haskell-indentation)
+;;(add-hook 'haskell-mode-hook 'turn-on-haskell-indent)
+;;(add-hook 'haskell-mode-hook 'turn-on-haskell-simple-indent)
+
+;;; tuareg mode for ML/Caml/OCaml lang
+(add-to-list 'load-path
+             (concat (file-name-directory (or load-file-name buffer-file-name)) "../packages/tuareg-mode-1.45.7/")
+             )
+(add-to-list 'auto-mode-alist '("\\.ml\\w?" . tuareg-mode))
+(autoload 'tuareg-mode "tuareg" "Major mode for editing ML/Caml/OCaml code." t)
+(autoload 'camldebug "camldebug" "Run the Caml debugger" t)
+
+;;; xbbcode-mode for editing BBCode
+(add-to-list 'auto-mode-alist '("\\.bbcode\\'" . xbbcode-mode))
+(autoload 'xbbcode-mode "xbbcode-mode" "Load xbbcode-mode for editing BBCode." t)
