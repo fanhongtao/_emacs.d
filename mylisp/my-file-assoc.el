@@ -2,6 +2,13 @@
 (autoload 'xahk-mode "xahk-mode" "AutoHotKey mode" t)
 (add-to-list 'auto-mode-alist '("\\.ahk\\'" . xahk-mode))
 
+;;; AutoIt
+(autoload 'autoit-mode "autoit-mode" "AutoIt mode" t)
+(add-to-list 'auto-mode-alist '("\\.au3\\'" . autoit-mode))
+
+(autoload 'au3-mode "au3-mode" "AutoIt mode" t)
+;;(add-to-list 'auto-mode-alist '("\\.au3\\'" . autoit-mode))
+
 ;;; C#
 (autoload 'csharp-mode "csharp-mode" "Major mode for editing C# code." t)
 (setq auto-mode-alist
