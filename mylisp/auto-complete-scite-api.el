@@ -139,7 +139,7 @@ ac-read-file-dictionary (from auto-complete.el) used to cache the file contents"
       (mapc '(lambda(line)
 	       (ac-scite-api--read-line line result))
 	    (ac-scite-api--read-api-files))
-      result)))b
+      result)))
 
 (defun ac-scite-api-init()
   "parse api lines into hashtable \{ac-scite-api--caches}
