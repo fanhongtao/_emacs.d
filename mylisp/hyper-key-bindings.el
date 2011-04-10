@@ -1,6 +1,17 @@
 ;;; hyper-key-bindings.el -- Some functions bind to 'hyper-, 'super- keys
-
-;; <lwindows>, <rwindows>, <menu>, <capslock> 
+;;
+;; With the following settings, <lwindow> key is used as 'super' modifier,
+;; <apps> ("[menu]") used as 'hyper' modifier, <rwindow> key as 'alt' modifier.
+;;
+;; You can always use `key-translation-map' to map other keys as modifiers.
+;;
+;; 
+;; Window-related commands are bind to super- keys (as the similarity
+;; to 'windows' logo).  Other commands bind to hyper- keys. Note `alt'
+;; modifier are not used here, but Org Mode use it to input accent
+;; chars.
+;;
+;;
 
 ;;{{{ initial magics
 (defun enable-hyper-super-modifiers-win32 ()
@@ -8,13 +19,14 @@
        (setq w32-apps-modifier 'hyper)
 
        (setq w32-pass-lwindow-to-system nil)
+       ;;(setq w32-phantom-key-code 42)  ;; what for?
        (setq w32-lwindow-modifier 'super)
+       (setq w32-rwindow-modifier 'alt)  
 
-       ;;(setq w32-capslock-as-
        )
 
 (defun enable-hyper-super-modifiers-linux-x ()
-  ;; on nowaday linux, <Windows> key is usually configured to Super 
+  ;; on nowadays linux, <windows> key is usually configured to Super
     
   ;; menu key as hyper (Note: for H-s, you need to release <menu> key before pressing 's')
   (define-key key-translation-map [menu] 'event-apply-hyper-modifier) ;H-
@@ -84,9 +96,19 @@
 (load "folding" t)		;; complementary for outline/hideshow, user-definable mark-based folding
 (load "fold-dwim" t)		;; uniformed front-end for outline/hideshow/folding
 
+(load "tabbar" t)
+(load "imenu-tree" t)
+(load "sr-speedbar" t)
+(load "ide-skel" t)  ;; not recommended, it has some bugs
 
 ;;}}}
 
+(defun hkb--symbol-selected-or-current ()
+  "Get the selected text or (if nothing selected) current symbol."
+  (if (and transient-mark-mode mark-active)
+      (buffer-substring-no-properties (region-beginning) (region-end))
+    (thing-at-point 'symbol)))
+       
 
 ;;{{{ CUA-like editing
 (global-set-key (kbd "H-c") 'kill-ring-save) ;; copy
@@ -128,41 +150,43 @@
 
 (global-set-key (kbd "H-;") 'comment-or-uncomment-region)
 
-(defun hkb-list-methods()
+(defun hkb-select-method()
   (interactive)
   (cond
    ( (fboundp 'anything-imenu) (anything-imenu) )
    ( (fboundp 'idomenu) (idomenu) )
    ( (and (fboundp 'eassist-list-methods)
-	   (memq major-mode '(emacs-lisp-mode c-mode java-mode python-mode))
-	   (memq 'semantic-mode minor-mode-alist))
+	  (memq major-mode '(emacs-lisp-mode c-mode java-mode python-mode))
+	  (memq 'semantic-mode minor-mode-alist))
      (eassist-list-methods) )
    (t (imenu))))
-(global-set-key (kbd "H-o") 'hkb-list-methods)
+(global-set-key (kbd "H-]") 'hkb-select-method)
 
 (defun hkb-goto-symbol()
   (interactive)
-  (let ( (keyword (thing-at-point 'symbol)) )
+  (let ( (keyword (hkb--symbol-selected-or-current)) )
     (cond
-     ( (eq major-mode 'emacs-lisp-mode)
-       (find-function-at-point))
+     ( (memq major-mode '(emacs-lisp-mode lisp-interaction-mode))
+       (find-function-at-point) )
      ( (and (fboundp 'semantic-complete-jump)
 	     (memq major-mode '(c-mode java-mode python-mode)))
-       (semantic-complete-jump))
+       (semantic-complete-jump) )
      (t
       (find-tag)))))
-(global-set-key (kbd "H-]") 'hkb-goto-symbol)
+(global-set-key (kbd "H-.") 'hkb-goto-symbol)
 
 ;;}}}
 
 ;;{{{ operation on current word/symbol
 (defun hkb-goto-symbol-occurrence (forward)
-  (let ( (symbol (thing-at-point 'symbol)) )
-    (if (not (member symbol highlight-symbol-list))
-	(highlight-symbol-at-point))  ;;FIXME
-    (if forward
-	(highlight-symbol-next)
-      (highlight-symbol-prev))))
+  (let ( (symbol (hkb--symbol-selected-or-current)) )
+    (unless symbol (error "No symbol at point"))  
+    (unless hi-lock-mode (hi-lock-mode 1))  
+    (if (not (member symbol highlight-symbol-list))  
+	(highlight-symbol-at-point)))  
+  (if forward
+      (highlight-symbol-next)
+    (highlight-symbol-prev)))
 
 (defun hkb-goto-symbol-next-occur ()
   (interactive)
@@ -180,12 +204,20 @@
       (global-set-key (kbd "H-#") 'hkb-goto-symbol-prev-occur)))
       
 ;; occur
+(defun hkb-occur-at-point ()
+  (interactive)
+  (occur (format "%s" (hkb--symbol-selected-or-current))))
+  
+(global-set-key (kbd "H-l") 'hkb-occur-at-point)
 
-(global-set-key (kbd "H-l") '(lambda()
-			       (interactive)
-			       (occur (format "%s" (thing-at-point 'symbol)))))
+(defun hkb-moccur-at-point ()
+  (interactive)
+  (moccur (format "%s" (hkb--symbol-selected-or-current))))
+
+(global-set-key (kbd "H-L") 'hkb-moccur-at-point)
 
 ;; grep
+;;TODO: implement this
 
 ;; completion  (Emacs default: M-TAB - lisp-complete-symbol, M-/ - dabbrev-expand)
 
@@ -202,6 +234,8 @@
 ;;}}}
 
 ;;{{{ windows
+
+;; sizing
 (global-set-key (kbd "<s-up>") 'enlarge-window)
 (global-set-key (kbd "<s-down>") 'shrink-window)
 (global-set-key (kbd "<s-left>") 'shrink-window-horizontally)
@@ -210,7 +244,7 @@
 (global-set-key (kbd "<S-s-up>") '(lambda ()
 				   (interactive)
 				   (enlarge-window 3)))
-(global-set-key (kbd "<S-s-down>") '(lambda ()
+(global-set-key (kbd"<S-s-down>") '(lambda ()
 				      (interactive)
 				      (shrink-window 3)))
 (global-set-key (kbd "<S-s-left>") '(lambda ()
@@ -237,7 +271,15 @@
 				 (shrink-window 3)
 				 (shrink-window-horizontally 5)))
 
+;; motion between windows
+(windmove-default-keybindings 'super)
 
+(global-set-key (kbd "<s-tab>") 'other-window)
+(global-set-key (kbd "<S-s-tab>") '(lambda ()
+				     (interactive)
+				     (other-window -1)))
+
+;; move buffer across windows
 ;; https://github.com/banister/window-rotate-for-emacs
 (defun rotate-windows-helper(x d)
   (if (equal (cdr x) nil) (set-window-buffer (car x) d)
@@ -251,16 +293,66 @@
 (global-set-key (kbd "<s-backspace>") 'rotate-windows)
 ;;TODO: backward-rotate-windows
 
-	     
-(global-set-key (kbd "<s-tab>") 'other-window)
-(global-set-key (kbd "<S-s-tab>") '(lambda ()
-				     (interactive)
-				     (other-window -1)))
+
+;; modified from windmove-do-window-select
+(defun windmove-do-swap-window (dir &optional arg window)
+  "Move the buffer to the window at direction DIR.
+DIR, ARG, and WINDOW are handled as by `windmove-other-window-loc'.
+If no window is at direction DIR, an error is signaled."
+  (let ((other-window (windmove-find-other-window dir arg window)))
+    (cond ((null other-window)
+           (error "No window %s from selected window" dir))
+          ((and (window-minibuffer-p other-window)
+                (not (minibuffer-window-active-p other-window)))
+           (error "Minibuffer is inactive"))
+          (t
+           (let ( (old-buffer (window-buffer window)) )
+	     (set-window-buffer window (window-buffer other-window))
+	     (set-window-buffer other-window old-buffer)
+	     (select-window other-window))))))
+
+(defun hsb-swap-buffer-up (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'up arg))
+
+(defun hsb-swap-buffer-down (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'down arg))
+
+(defun hsb-swap-buffer-left (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'left arg))
+
+(defun hsb-swap-buffer-right (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'right arg))
+
+(global-set-key (kbd "<C-s-up>") 'hsb-swap-buffer-up)
+(global-set-key (kbd "<C-s-down>") 'hsb-swap-buffer-down)
+(global-set-key (kbd "<C-s-left>") 'hsb-swap-buffer-left)
+(global-set-key (kbd "<C-s-right>") 'hsb-swap-buffer-right)
+
+
+;;tabs	     
 ;; (if (featurep 'tabbar)
 ;;     (progn
 ;;       (global-set-key (kbd "<C-tab>")   'tabbar-forward-tab)
 ;;       (global-set-key (kbd "<C-s-tab>") 'tabbar-backward-tab)))
 
+;;
+;; some special windows
+(if (featurep 'imenu-tree)
+    (global-set-key (kbd "s-I") 'imenu-tree))
+
+(if (featurep 'ide-skel)
+    (progn
+      (global-set-key (kbd "s-B") 'ide-skel-toggle-bottom-view-window)
+      (global-set-key (kbd "s-R") 'ide-skel-toggle-right-view-window)
+      (global-set-key (kbd "s-L") 'ide-skel-toggle-left-view-window)))
+
+(global-set-key (kbd "s-s") 'speedbar)
+(if (featurep 'sr-speedbar)
+    (global-set-key (kbd "s-S") 'sr-speedbar-toggle))
 ;;}}}
 
 ;;{{{ misc
