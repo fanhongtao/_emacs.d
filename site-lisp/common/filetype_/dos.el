@@ -1,11 +1,13 @@
 ;;; dos.el --- major mode for editing Dos scripts (batch files)
 
-;; Copyright (C) 2003, 2008, 2009 Arni Magnusson
+;; Copyright (C) 2003, 2008, 2009, 2010, 2011 Arni Magnusson
 
 ;; Author:   Arni Magnusson
-;; Version:  2.9
+;; Version:  2.16
 ;; Keywords: languages
 ;; URL:      http://emacswiki.org/emacs/dos.el
+
+(defconst dos-mode-version "2.16" "Dos Mode version number.")
 
 ;;; Commentary:
 ;;
@@ -13,8 +15,8 @@
 ;; highlighting are:
 ;;
 ;; Face                          Example
+;; dos-label-face                :LABEL
 ;; font-lock-comment-face        rem
-;; font-lock-doc-face            :LABEL
 ;; font-lock-builtin-face        copy
 ;; font-lock-keyword-face        goto
 ;; font-lock-warning-face        cp
@@ -46,6 +48,13 @@
 
 ;;; History:
 ;;
+;; 14 Feb 2011  2.16 Improved highlighting of variable names.
+;; 20 Sep 2010  2.15 Changed :LABEL highlighting to new `dos-label-face'. Improved highlighting of variable names.
+;;  8 Jul 2010  2.14 Added user function `dos-mode-version'.
+;; 29 Jun 2010  2.13 Added keyword "erase".
+;; 16 Apr 2010  2.12 Added ;;;###autoload cookie.
+;; 29 Sep 2009  2.11 Improved highlighting of strings.
+;; 18 Sep 2009  2.10 Improved highlighting of comments.
 ;; 27 May 2009  2.9  Improved documentation.
 ;; 26 May 2009  2.8  Added user function `dos-help-mode'. Renamed user function `dos-help' to `dos-help-cmd'. Added
 ;;                   internal variable `dos-menu', providing GUI menu.
@@ -55,15 +64,15 @@
 ;; 24 Mar 2009  2.4  Improved highlighting of scripts/labels following call and goto.
 ;; 18 Mar 2009  2.3  Added support for @rem highlighting. Improved highlighting of -options and scripts/labels following
 ;;                   call and goto.
-;; 11 Mar 2009  2.2  Added user functions `dos-help', `dos-run', and `dos-run-args'. Improved highlighting of scripts and
-;;                   labels following call and goto.
+;; 11 Mar 2009  2.2  Added user functions `dos-help', `dos-run', and `dos-run-args'. Improved highlighting of scripts
+;;                   and labels following call and goto.
 ;; 10 Mar 2009  2.1  Added keywords "at", "attrib", "cd", "cmd", "color", "doskey", "path", "popd", "prompt", "pushd",
 ;;                   "sort", and "start". Added support for highlighting /options.
 ;;  9 Mar 2009  2.0  Complete rewrite. Added user functions `dos-outline' and `dos-sep'. Added internal variables
-;;                   `dos-font-lock-keywords', `dos-mode-abbrev-table', `dos-mode-map', and `dos-mode-syntax-table'. Added
-;;                   local variables `comment-start', `imenu-generic-expression', and `outline-regexp'. Added keyword
-;;                   "copy". Added support for ::comment highlighting. Added commentary on installation, customization, and
-;;                   usage.
+;;                   `dos-font-lock-keywords', `dos-mode-abbrev-table', `dos-mode-map', and `dos-mode-syntax-table'.
+;;                   Added local variables `comment-start', `imenu-generic-expression', and `outline-regexp'. Added
+;;                   keyword "copy". Added support for ::comment highlighting. Added commentary on installation,
+;;                   customization, and usage.
 ;; 18 Feb 2009  1.1  Changed face names, added keyword "cls", and removed `dos-template' line containing "[-help]".
 ;;  5 Dec 2008  1.0  Added support for underscored_variable highlighting.
 ;; 22 Aug 2003  0.9  Created main function `dos-mode', user variable `dos-mode-hook', user functions `dos-template' and
@@ -79,11 +88,9 @@
 ;; 2  User variables
 
 (defcustom dos-mode-hook nil
-  "Hook for `dos-mode'.
-
+  "Hook for `dos-mode'.\n
 If you want to set syntax colors or keybindings, here is an example that does
-that:
-
+that:\n
 \(defun my-dos-hook ()
   (set-face-attribute 'font-lock-doc-face nil
                       :foreground \"black\" :weight 'bold)
@@ -92,6 +99,7 @@ that:
   :tag   "Hook"
   :type  'hook
   :group 'dos)
+(defface dos-label-face '((t :weight bold)) "Font Lock mode face used to highlight Dos labels." :group 'dos)
 
 ;; 3  Internal variables
 
@@ -99,21 +107,22 @@ that:
   (eval-when-compile
     (let ((COMMANDS
            '("at"       "attrib"   "cd"       "cls"      "color"    "copy"     "date"     "defined"  "del"      "dir"
-             "doskey"   "echo"     "endlocal" "exist"    "fc"       "find"     "md"       "more"     "move"     "path"
-             "pause"    "popd"     "prompt"   "pushd"    "ren"      "rd"       "set"      "setlocal" "shift"    "sort"
-             "time"     "title"    "type"     "xcopy"))
+             "doskey"   "echo"     "endlocal" "erase"    "exist"    "fc"       "find"     "md"       "more"     "move"
+             "path"     "pause"    "popd"     "prompt"   "pushd"    "ren"      "rd"       "set"      "setlocal" "shift"
+             "sort"     "time"     "title"    "type"     "xcopy"))
           (CONTROLFLOW
            '("call"     "cmd"      "do"       "else"     "equ"      "exit"     "for"      "geq"      "goto"     "gtr"
              "if"       "in"       "leq"      "lss"      "neq"      "not"      "start"))
           (LINUX
            '("cat"      "cp"       "ls"       "mkdir"    "mv"       "rm"       "rmdir")))
       (list
-       '("^[ \t]*\\(@?rem\\>\\|::\\).*" (0 font-lock-comment-face t))
-       '("^:[^:].*" . font-lock-doc-face)
        '("\\<\\(call\\|goto\\)\\>[ \t]+%?\\([A-Za-z0-9-_\\:.]+\\)%?" (2 font-lock-constant-face t))
-       '("\\<set\\>[ \t]*\\(\\w+\\)"      (1 font-lock-variable-name-face))
-       '("%\\(\\w+\\)%?"                  (1 font-lock-variable-name-face))
-       '("[ =][-/]+\\(\\w+\\)"               (1 font-lock-type-face append))
+       '("^[ \t]*\\(@?rem\\>\\|::\\).*"              (0 font-lock-comment-face t))
+       '("^:[^:].*" .                                   'dos-label-face)
+       '("\\<\\(defined\\|set\\)\\>[ \t]*\\(\\w+\\)" (2 font-lock-variable-name-face))
+       '("%\\(\\w+\\)%?"                             (1 font-lock-variable-name-face))
+       '("!\\(\\w+\\)!?"                             (1 font-lock-variable-name-face)) ; delayed-expansion !variable!
+       '("[ =][-/]+\\(\\w+\\)"                       (1 font-lock-type-face append))
        (cons (regexp-opt COMMANDS    'words) font-lock-builtin-face)
        (cons (regexp-opt CONTROLFLOW 'words) font-lock-keyword-face)
        (cons (regexp-opt LINUX       'words) font-lock-warning-face)))))
@@ -128,7 +137,8 @@ that:
     ["Mini Template" dos-template-mini] ; :help "Insert minimal template"
     "--"
     ["Help (cmd)"    dos-help-cmd     ]   ; :help "Show help page for Dos command"
-    ["Help (mode)"   dos-help-mode    ])) ; :help "Show help page for Emacs dos-mode"
+    ["Help (mode)"   dos-help-mode    ]   ; :help "Show help page for Emacs dos-mode"
+    ["Version"       dos-mode-version ])) ; :help "Show Dos Mode version"
 (defvar dos-mode-abbrev-table nil)(define-abbrev-table 'dos-mode-abbrev-table ())
 (defvar dos-mode-map
   (let ((map (make-sparse-keymap)))
@@ -136,20 +146,23 @@ that:
     (define-key map [f11]         'dos-outline      )
     (define-key map [S-f12]       'dos-template-mini)
     (define-key map [f12]         'dos-template     )
+    (define-key map [?\C-c ?\C-.] 'dos-mode-version )
     (define-key map [?\C-c ?\C-/] 'dos-help-cmd     )
     (define-key map [?\C-c ?\C- ] 'dos-sep          )
     (define-key map [?\C-c ?\C-a] 'dos-run-args     )
     (define-key map [?\C-c ?\C-c] 'dos-run          )
     (define-key map [?\C-c ?\C-m] 'dos-help-mode    )
+    (define-key map [?\C-c ?\C-v] 'dos-run          )
     map))
 (defvar dos-mode-syntax-table
   (let ((table (make-syntax-table)))
-    (modify-syntax-entry ?~ "w" table)
-    (modify-syntax-entry ?% "." table)
-    (modify-syntax-entry ?- "w" table)
-    (modify-syntax-entry ?_ "w" table)
-    (modify-syntax-entry ?{ "w" table)
-    (modify-syntax-entry ?} "w" table)
+    (modify-syntax-entry ?~  "w" table)
+    (modify-syntax-entry ?%  "." table)
+    (modify-syntax-entry ?-  "w" table)
+    (modify-syntax-entry ?_  "w" table)
+    (modify-syntax-entry ?{  "w" table)
+    (modify-syntax-entry ?}  "w" table)
+    (modify-syntax-entry ?\\ "." table)
     table))
 
 ;; 4  User functions
@@ -157,6 +170,8 @@ that:
 (defun dos-help-cmd (cmd) "Show help for Dos command." (interactive "sHelp: ")(shell-command (concat "help " cmd)))
 (defun dos-help-mode () "Show help page for `dos-mode'." (interactive)
   (describe-function 'dos-mode)(switch-to-buffer "*Help*")(delete-other-windows)(message nil))
+(defun dos-mode-version () "Show Dos Mode version number." (interactive)
+  (message (concat "Dos Mode version " dos-mode-version)))
 (defun dos-outline () "Navigate within Dos script using outline-mode.
 
 If you haven't already configured an `outline-mode-hook', here is an example
@@ -180,23 +195,23 @@ that makes it easy to return to `dos-mode':
 setlocal
 if [%1]==[] goto HELP
 if [%1]==[--help] goto HELP
-REM #######################################################################################################################
-REM                                                                                                                       #
-REM Script:                                                                                                               #
-REM                                                                                                                       #
-REM Purpose:                                                                                                              #
-REM                                                                                                                       #
-REM Args:                                                                                                                 #
-REM                                                                                                                       #
-REM Notes:                                                                                                                #
-REM                                                                                                                       #
-REM Warning:                                                                                                              #
-REM                                                                                                                       #
-REM Requires:                                                                                                             #
-REM                                                                                                                       #
-REM Returns:                                                                                                              #
-REM                                                                                                                       #
-REM #######################################################################################################################
+REM ####################################################################################################################
+REM                                                                                                                    #
+REM Script:                                                                                                            #
+REM                                                                                                                    #
+REM Purpose:                                                                                                           #
+REM                                                                                                                    #
+REM Args:                                                                                                              #
+REM                                                                                                                    #
+REM Notes:                                                                                                             #
+REM                                                                                                                    #
+REM Warning:                                                                                                           #
+REM                                                                                                                    #
+REM Requires:                                                                                                          #
+REM                                                                                                                    #
+REM Returns:                                                                                                           #
+REM                                                                                                                    #
+REM ####################################################################################################################
 \nrem Pop args until file=%1
 set par=default
 :STARTLOOP
@@ -214,6 +229,7 @@ echo.\n
 
 ;; 5  Main function
 
+;;;###autoload
 (defun dos-mode () "Major mode for editing Dos scripts.\n
 The `dos-help-mode' command shows this page.\n
 Start a new script from `dos-template' or `dos-template-mini'. Navigate between
