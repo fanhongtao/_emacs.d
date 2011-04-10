@@ -1,4 +1,6 @@
 (tool-bar-mode -1)
+(setq frame-title-format '("%b (%m) - Emacs "
+			   (:eval emacs-version)))
 
 (if (<= emacs-major-version 23) ;; emacs < 23.2
     (setq tab-always-indent nil)
@@ -17,10 +19,8 @@
 (setq cua-enable-cua-keys nil)
 (cua-mode)
 
-(recentf-mode)
 
 (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
-
 
 ;; make M-z behave more as zap-up-to-char 
 (defadvice zap-to-char (after my-zap-to-char-advice (arg char) activate)
@@ -29,7 +29,31 @@
     (insert char)
     (forward-char -1))
 
+;; Move line up/down. Stolen from org-mode's M-up/down
+;; TODO: support region (move region line up/down)
+(defun swap-line-up ()
+  "Swap the current line with the line above."
+  (interactive)
+  (transpose-lines 1)
+  (beginning-of-line -1))
 
+(defun swap-line-down ()
+  "Swap current line with the line below."
+  (interactive)
+  (beginning-of-line 2) (transpose-lines 1) (beginning-of-line 0))
+
+(global-set-key (kbd "<M-up>") 'swap-line-up)
+(global-set-key (kbd "<M-down>") 'swap-line-down)
+
+
+(require 'recentf)
+(recentf-mode)
+
+;;{{{ third party libraries
+
+(ignore-errors
+  (require 'undo-tree)
+  (global-undo-tree-mode))
 
 
 (if (load "anything" t)
@@ -60,3 +84,20 @@
 (load "highlight-indentation" t)
 
 (load "idomenu" t)
+(load "imenu-tree" t)
+(load "hyper-key-bindings" t)
+
+(if (or (featurep 'tabbar)
+	 (load "tabbar" t))
+    (progn
+      (global-set-key (kbd "<C-tab>") 'tabbar-forward)
+      (global-set-key (kbd "<C-S-tab>") 'tabbar-backward)))
+
+(if (and (load "hide-lines" t)
+	 (load "hidesearch" t))
+    (progn
+      (global-set-key (kbd "C-c C-s") 'hidesearch)
+      (global-set-key (kbd "C-c C-a") 'show-all-invisible)))
+
+	 
+  
