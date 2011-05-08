@@ -33,13 +33,18 @@
 
 ;;; Code:
 
-(defvar fortune-prg "/usr/games/fortune")
+(defcustom fortune-prg "/usr/games/fortune"
+  "Program for `insert-fortune' and `insert-cowsay-fortune'")
 
+(defcustom fortune-data-dir "/usr/share/games/fortunes"
+  "Data dir storing fortunes cookies")
 
-(defvar cowsay-prg "/usr/games/cowsay")
+(defcustom cowsay-prg "/usr/games/cowsay"
+  "Program for `cowsay-quote-region' and `insert-cowsay-fortune'")
 
+(defcustom cowsay-data-dir "/usr/share/cowsay/cows"
+  "Data dir storing cowsay figures")
 
-(defvar cowsay-data-dir "/usr/share/cowsay/cows")
 
 
 (defun call-fortune (fortune-file)
@@ -94,6 +99,45 @@
   (insert-cowsay-fortune (random-cowfile) fortune-file))
 
 
+(defun ido-insert-cowsay-fortune (&optional cowfile fortune-file)
+  "Insert a fortune cookie, quoted by a 'cowsay' figure.
+
+This one would use `ido' to let user choose the cowfile and the fortune cookie file."
+   (interactive)
+   (let ( (cowfile (ido-completing-read "Cowfile: "
+                                        (directory-files cowsay-data-dir nil ".*.cow")
+                                        "foobar"
+                                        "foobar"
+                                        nil
+                                        nil
+                                        "default.cow"
+                                        ))
+          (fortune-file (ido-completing-read "Fortune: "
+                                              (directory-files fortune-data-dir nil "^[^\\.]*$")
+                                              "foobar"
+                                              "foobar"
+                                              nil
+                                              nil
+                                              " "
+                                              )) )                                              
+     (insert-string (cowsay-fortune cowfile fortune-file))))
+
+(defun init-cygwin-cowsay-fortune (cygwin-path)
+  "Init `fortune-prg', `fortune-data-dir', `cowsay-prg' and `cowsay-data-dir' with Cygwin."  
+  (setq fortune-prg	(concat cygwin-path "/bin/fortune"))
+  (setq fortune-data-dir  (concat cygwin-path "/usr/share/games/fortunes"))
+  ;; clear LC_ALL / LANG to prevent perl complaining
+  (setq cowsay-prg	(concat cygwin-path "/bin/env LC_ALL= LANG= /bin/perl /usr/local/bin/cowsay"))
+  (setq cowsay-data-dir	(concat cygwin-path "/usr/share/cowsay")))
+
+(if (eq system-type 'windows-nt)
+    (init-cygwin-cowsay-fortune))
+ 
+  
+
+(provide 'cowsay-fortune)
+
+;;; cowsay-fortune.el ends here
 
 
 				   
