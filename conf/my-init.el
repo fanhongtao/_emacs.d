@@ -1,31 +1,47 @@
 ;;{{{ some basic settings
+(fset yes-or-no-p 'y-or-n-p)
+(require 'help-mode) ;;to prevent error like: "help-setup-xref: Symbol's value as variable is void: help-xref-following"
+
 (tool-bar-mode -1)
 (setq frame-title-format '("%b (%m) - Emacs "
 			   (:eval emacs-version)))
 
-(if (<= emacs-major-version 23) ;; emacs < 23.2
-    (setq tab-always-indent nil)
-  (setq tab-always-indent 'complete)) ;; emacs >= 23.2
 
 (when (eq window-system 'x)
-    (setq x-select-enable-clipboard t))
+    (setq x-select-enable-clipboard t)
 ;;  (setq x-select-enable-primary t)
+    (set-scroll-bar-mode 'right))
 
 
+(setq show-paren-mode t)
+
+(setq-default truncate-lines t)
+(setq-default fill-column 100)
+;;(auto-fill-mode t)
+
+(require 'recentf)
+(setq recentf-max-saved-items 100)
+
+(setq recentf-menu-path '("File"))
+(recentf-mode t)
+
+
+;;}}}
+
+;;{{{ key bindings
 (setq shift-select-mode t)
 (delete-selection-mode t)
 
 (setq cua-enable-cua-keys nil)
 (cua-mode)
 
-(setq-default truncate-lines t)
+;; (if (<= emacs-major-version 23) ;; emacs < 23.2
+;;     (setq tab-always-indent nil)
+;;   (setq tab-always-indent 'complete)) ;; emacs >= 23.2
+(setq tab-always-indent t)
 
-(require 'recentf)
-(setq recentf-max-saved-items 100)
-(recentf-mode)
-;;}}}
-
-;;{{{ key bindings
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
 
 (global-set-key (kbd "C-m") 'newline-and-indent)
 (global-set-key (kbd "C-j") 'newline)
@@ -80,6 +96,10 @@
   (setq w32-pass-lwindow-to-system nil)
   (define-key key-translation-map (kbd "<lwindow>") (kbd "<f11>")))
 
+;;FIXME: not work
+(when (eq window-system 'x)
+  (define-key key-translation-map (kbd "<super>") (kbd "<f11>"))
+  )
 
 (when (load "idle-require" t)
   ;;FIXME
@@ -97,13 +117,31 @@
 (global-set-key (kbd "<f3> l") 'find-library)
 (global-set-key (kbd "<f3> F") 'ffap-other-window)
 
-(global-set-key (kbd "<f12> l") 'load-library)
-(global-set-key (kbd "<f12> b") 'eval-buffer)
-(global-set-key (kbd "<f12> r") 'eval-region)
+(global-unset-key (kbd "<f12> l"))
+(global-set-key (kbd "<f12> l l") 'load-library)
+(global-set-key (kbd "<f12> l t") 'load-theme)
+
+(global-set-key (kbd "<f12> e b") 'eval-buffer)
+(global-set-key (kbd "<f12> e r") 'eval-region)
+(global-set-key (kbd "<f12> e f") 'eval-defun)
+(global-set-key (kbd "<f12> e s") 'eval-sexp)
 
 ;;}}}
 
+;;{{{ misc
+(require 'ido)
+(unless (fboundp 'ido-common-initialization)   ;;workaround for emacs 23.1's bug(?)
+  (defun ido-common-initialization ()
+    (ido-init-completion-maps)
+    (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
+    (add-hook 'choose-completion-string-functions 'ido-choose-completion-string))
+  )
+;;}}}
 ;;{{{ some important third party libraries
+(when (load "bm" t)
+    (global-set-key (kbd "<left-fringe> <C-mouse-1>") 'bm-toggle-mouse)
+    (global-set-key (kbd "<left-fringe> <C-mouse-4>") 'bm-previous-mouse)
+    (global-set-key (kbd "<left-fringe> <C-mouse-5>") 'bm-next-mouse))
 
 (ignore-errors
   (require 'undo-tree)
@@ -138,15 +176,17 @@
 
 (when (load "highlight-symbol" t)
   (global-set-key (kbd "<double-down-mouse-1>") 'highlight-symbol-at-point)
+
   )
 ;;}}}
 
-(load "my-word-ops" t)
-(load "my-cua-keys" t)
-(load "my-win-fns" t)
+(load "~/.emacs.d/conf/my-word-ops" t)
+(load "~/.emacs.d/conf/my-cua-keys" t)
+(load "~/.emacs.d/conf/my-vi-keys" t)
+(load "~/.emacs.d/conf/my-win-fns" t)
 ;;(load "my-options-cmds" t) ;;TODO
-(load "my-misc" t)
-(load "my-one-key" t)
+(load "~/.emacs.d/conf/my-misc" t)
+(load "~/.emacs.d/conf/my-one-key" t)
 ;;(load "hyper-key-bindings" t)
 
 

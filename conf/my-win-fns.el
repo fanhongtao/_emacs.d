@@ -1,13 +1,23 @@
 (require 'windmove)
 
-(unless (require 'window-extension nil t)
-    (require 'sticky-windows nil t))
 
-(unless (require 'ide-skel nil t)
+(unless (require 'ide-skel nil t)  ;; `ide-skel' would load `tabbar' and  make its own tab group settings
   (require 'tabbar nil t))
 
+(unless (require 'window-extension nil t)  ;; `window-extension' already contain the functions of `sticky-windows'
+    (require 'sticky-windows nil t))
+;;(require 'dedicated) ;;A very simple minor mode for dedicated buffers
+
+(require 'transpose-frame nil t) ;; flip window layout within a frame
+(require 'window-numbering nil t) ;; each window has a number in mode-line
+;;(require 'pack-windows) ;; Resize all windows to display as much info as possible.
+;;(require 'split-root) ;; roote window splitter
+
+;; for some special buffer
 (require 'imenu-tree nil t)
 (require 'sr-speedbar nil t)
+;;(require 'nav)  ;; emacs-nav
+
 
 ;;{{{ window resizing
 
@@ -76,10 +86,14 @@
 
 ;;{{{ swap buffer window
 ;; modified from windmove-do-window-select
-(defun windmove-do-swap-window (dir &optional arg window)
+(defun windmove-do-swap-window (dir swap &optional arg window)
   "Move the buffer to the window at direction DIR.
-DIR, ARG, and WINDOW are handled as by `windmove-other-window-loc'.
-If no window is at direction DIR, an error is signaled."
+
+If SWAP is non-nil, the buffers in the source window and target
+window would be swapped, otherwise only the source buffer be
+moved to target window.  DIR, ARG, and WINDOW are handled as by
+`windmove-other-window-loc'.  If no window is at direction DIR,
+an error is signaled."
   (let ((other-window (windmove-find-other-window dir arg window)))
     (cond ((null other-window)
            (error "No window %s from selected window" dir))
@@ -98,42 +112,51 @@ If no window is at direction DIR, an error is signaled."
 			(other-point (window-point other-window)) )
 		   (progn
 		     (set-window-point window other-point)
-		     (set-window-point other-window this-point)
-		     (message "unimplemented: swap same buffer?")))
+		     (set-window-point other-window this-point)))
 	       (progn
-		 (set-window-buffer window (window-buffer other-window))
+                 (if swap
+                     (set-window-buffer window (window-buffer other-window)))
 		 (set-window-buffer other-window this-buffer)))
 	     (select-window other-window))))))
 
 
 (defun swap-buffer-up (&optional arg)
   (interactive "P")
-  (windmove-do-swap-window 'up arg))
+  (windmove-do-swap-window 'up t arg))
 
 (defun swap-buffer-down (&optional arg)
   (interactive "P")
-  (windmove-do-swap-window 'down arg))
+  (windmove-do-swap-window 'down t arg))
 
 (defun swap-buffer-left (&optional arg)
   (interactive "P")
-  (windmove-do-swap-window 'left arg))
+  (windmove-do-swap-window 'left t arg))
 
 (defun swap-buffer-right (&optional arg)
   (interactive "P")
-  (windmove-do-swap-window 'right arg))
+  (windmove-do-swap-window 'right t arg))
+
+(defun move-buffer-up (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'up nil arg))
+
+(defun move-buffer-down (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'down nil arg))
+
+(defun move-buffer-left (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'left nil arg))
+
+(defun move-buffer-right (&optional arg)
+  (interactive "P")
+  (windmove-do-swap-window 'right nil arg))
+
 
 ;;--- misc
 (defun other-window-backward (arg)
   (interactive "p")
   (other-window (- arg)))
-
-(require 'ido)
-(unless (fboundp 'ido-common-initialization)   ;;workaround for emacs 23.1's bug(?)
-  (defun ido-common-initialization ()
-    (ido-init-completion-maps)
-    (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
-    (add-hook 'choose-completion-string-functions 'ido-choose-completion-string))
-  )
 
 (defun ido-jump-to-window ()
   (interactive)
@@ -178,9 +201,8 @@ If no window is at direction DIR, an error is signaled."
 (defvar my-win-fns-keymap (make-sparse-keymap "Window operations"))
 (define-prefix-command 'my-win-fns-keymap)
 
-
-(defun init-win-fns-keys ()
-  (global-set-key (kbd "<f11>") my-win-fns-keymap)
+(defun init-win-fns-keys (prefix-key)
+  (global-set-key (read-kbd-macro prefix-key) 'my-win-fns-keymap)
 
   ;; translate <lwindow> to <f11>
   (define-key key-translation-map (kbd "<lwindow>") (kbd "<f11>"))
@@ -208,19 +230,35 @@ If no window is at direction DIR, an error is signaled."
     (define-key map (kbd "<down>") 'windmove-down)
     (define-key map (kbd "<left>") 'windmove-right)
     (define-key map (kbd "<right>") 'windmove-right)   
-
-    (define-key map (kbd "<s-backspace>") 'rotate-windows)
     
     (define-key map (kbd "<C-up>") 'swap-buffer-up)
     (define-key map (kbd "<C-down>") 'swap-buffer-down)
     (define-key map (kbd "<C-left>") 'swap-buffer-left)
     (define-key map (kbd "<C-right>") 'swap-buffer-right)
 
+    (define-key map (kbd "<M-up>") 'swap-buffer-up)
+    (define-key map (kbd "<M-down>") 'swap-buffer-down)
+    (define-key map (kbd "<M-left>") 'swap-buffer-left)
+    (define-key map (kbd "<M-right>") 'swap-buffer-right)
+    
     (define-key map (kbd "<tab>") 'other-window)
     (define-key map (kbd "<S-tab>") 'other-window-backward)
 
     (define-key map (kbd "j") 'ido-jump-to-window)
     (define-key map (kbd "<C-tab>") 'ido-jump-to-tab)
+
+    ;; (if (featurep 'window-numbering)
+    ;;     ;;FIXME: customize the keymap
+    ;;     (window-numbering-mode t))
+
+    (define-key map (kbd "<s-backspace>") 'rotate-windows)
+    ;;TODO:
+    ;; transpose-frame
+    ;; flip-frame
+    ;; flop-frame
+    ;; rotate-frame
+    ;; rotate-frame-clockwise
+    ;; rotate-frame-anti-clockwise
 
     ;; the following need some 3rd-party library
 
@@ -228,25 +266,31 @@ If no window is at direction DIR, an error is signaled."
     ;;          (featurep 'sticky-windows)))
     (define-key map (kbd "*") 'sticky-window-keep-window-visible)
     (define-key map (kbd "C-m") 'toggle-one-window)
+
+    ;; override C-x 0 and C-x 1, to regard window-dedicated-p
+    (when (fboundp 'sticky-window-delete-window)
+        (global-set-key (kbd "C-x 0") 'sticky-window-delete-window)
+        (global-set-key (kbd "C-x 1") 'sticky-window-delete-other-windows))
+
+    ;;TODO: split-root?
     
-    ;; (if (featurep 'tabbar)
-    ;;     (progn
-    ;;       (define-key super-win-keymap (kbd "<C-tab>")   'tabbar-forward-tab)
-    ;;       (define-key super-win-keymap (kbd "<C-s-tab>") 'tabbar-backward-tab)))
+    ;;(when (featurep 'tabbar)            
+    (define-key map (kbd "C-n") 'tabbar-forward-tab)
+    (define-key map (kbd "C-p") 'tabbar-backward-tab)
 
     ;;
     ;; some special windows
     ;;(when (featurep 'imenu-tree)
-    (define-key map (kbd "s-I") 'imenu-tree)
+    (define-key map (kbd "S-I") 'imenu-tree)
 
     ;;(when (featurep 'ide-skel)
-    (define-key map (kbd "s-B") 'ide-skel-toggle-bottom-view-window)
-    (define-key map (kbd "s-R") 'ide-skel-toggle-right-view-window)
-    (define-key map (kbd "s-L") 'ide-skel-toggle-left-view-window)
+    (define-key map (kbd "S-B") 'ide-skel-toggle-bottom-view-window)
+    (define-key map (kbd "S-R") 'ide-skel-toggle-right-view-window)
+    (define-key map (kbd "S-L") 'ide-skel-toggle-left-view-window)
 
-    (define-key map (kbd "s-s") 'speedbar)
+    (define-key map (kbd "S-s") 'speedbar)
     ;;(if (featurep 'sr-speedbar)
-    (define-key map (kbd "s-S") 'sr-speedbar-toggle)
+    (define-key map (kbd "S-S") 'sr-speedbar-toggle)
     ))
 
-(init-win-fns-keys)
+(init-win-fns-keys "<f11>")

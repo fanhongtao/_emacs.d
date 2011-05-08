@@ -1,16 +1,10 @@
+;; some commands for the symbol/word at point
 
 (require 'highlight-symbol)
 (require 'anything-config)
 
-(defun hsb--symbol-selected-or-current ()
-  "Get the selected text or (if nothing selected) current symbol."
-  (if (and transient-mark-mode mark-active)
-      (buffer-substring-no-properties (region-beginning) (region-end))
-    (thing-at-point 'symbol)))
-
-
 (defun hkb-goto-symbol-occurrence (forward)
-  (let ( (symbol (hkb--symbol-selected-or-current)) )
+  (let ( (symbol (highlight-symbol-get-symbol)) )
     (unless symbol (error "No symbol at point"))  
     (unless hi-lock-mode (hi-lock-mode 1))  
     (if (not (member symbol highlight-symbol-list))  
@@ -27,9 +21,16 @@
   (interactive)
   (hkb-goto-symbol-occurrence nil))
 
-(defun hkb-goto-symbol()
+
+(defun hkb--get-symbol-selected-or-current ()
+  "Get the selected text or (if nothing selected) current symbol."
+  (if (and transient-mark-mode mark-active)
+      (buffer-substring-no-properties (region-beginning) (region-end))
+    (thing-at-point 'symbol)))
+
+(defun hkb-find-symbol-at-point()
   (interactive)
-  (let ( (keyword (hkb--symbol-selected-or-current)) )
+  (let ( (keyword (hkb--get-symbol-selected-or-current)) )
     (cond
      ( (memq major-mode '(emacs-lisp-mode lisp-interaction-mode))
        (find-function-at-point) )
@@ -42,12 +43,12 @@
 ;; occur
 (defun hkb-occur-at-point ()
   (interactive)
-  (occur (format "%s" (hkb--symbol-selected-or-current))))
+  (occur (format "%s" (hkb--get-symbol-selected-or-current))))
 
 (defun hkb-multi-occur-at-point ()
   (interactive)
   ;;FIXME: use multi-occur?
-  (moccur (format "%s" (hkb--symbol-selected-or-current))))
+  (multi-occur (format "%s" (hkb--get-symbol-selected-or-current))))
 
 ;;TODO: grep
 ;;...
@@ -72,7 +73,8 @@
 
 (defun init-word-ops-keys ()
   (let ( (map my-word-ops-keymap) )
-    (define-key map (kbd "M-.") 'hkb-goto-symbol)
+    (define-key map (kbd "M-.") 'hkb-find-symbol-at-point) ;; Emacs style key
+    (define-key map (kbd "C-]") 'hkb-find-symbol-at-point) ;; Vi style key
     
     (define-key map (kbd "C-j") 'highlight-symbol-at-point)
     (define-key map (kbd "*") 'hkb-goto-symbol-next-occur)
@@ -83,7 +85,11 @@
 
     (define-key map (kbd "f") 'find-function-at-point)
     (define-key map (kbd "v") 'find-variable-at-point)
+    (define-key map (kbd "l") 'find-library)
     (define-key map (kbd "F") 'ffap-other-window)
+
+    (define-key map (kbd "<f3>") 'isearch-repeat-forward)
+    (define-key map (kbd "<S-f3>") 'isearch-repeat-backward)
 
    ;; (define-key map (kbd "d") 'sdcv-
     ))
