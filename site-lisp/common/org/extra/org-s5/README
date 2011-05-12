@@ -1,0 +1,42 @@
+This projects provides a glue to produce S5 based presentations from Org-Mode files.
+
+INSTALL:
+- copy org-s5.el somewhere in your Emacs' load-path
+
+- (require 'org-s5) from your .emacs
+
+- copy provided Org files into your sources directory
+
+  $ cp s5.org $ORG_SRC
+  $ cp s5-demo.org $ORG_SRC    # this one is optional, contains a demo presentation
+
+- Retrieve S5 (http://meyerweb.com/eric/tools/s5/ )
+
+- uncompress S5 (that will be a directory called "ui") inside your HTML export directory
+
+  Note: that export directory depends entirely on your Org setup. You might
+  want to configure it using the `org-publish' feature. See
+  http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.php
+  for details.
+
+  $ unzip s5.zip -d $ORG_HTML_EXPORT
+
+- copy jquery.js and org-slides.js (from this project) at the right place
+
+  $ cp jquery.js org-slides.js $ORG_HTML_EXPORT/ui
+
+Now you're ready to export an Org file as a S5 presentation. This will be
+automatically achieved through regular HTML export, provided that your Org file
+contains the "magic" line:
+
+#+SETUPFILE: s5.org
+
+
+
+Supported features:
+- Top-level entries are mapped to slides
+- Org tags are used for S5 "uncover" feature
+  Use "Incremental" and "ShowFirst" on the parent of the list you want to uncover step by step (see s5-demo.org for an example)
+- External links are taken into account
+
+
