@@ -36,6 +36,28 @@
       (global-set-key (kbd "<left-fringe><mouse-1>") 'fold-dwim-toggle)
       )
 
+;;--- selective display (quick & dirty code folding)
+;; http://www.emacswiki.org/emacs/HideShow#toc5
+;; hide lines whose indentation is bigger than x column
+(defun toggle-selective-display (column)
+  (interactive "P")
+  (set-selective-display
+   (or column
+       (unless selective-display
+         (1+ (current-column))))))
+
+(defun toggle-hiding (column)
+  (interactive "P")
+  (if hs-minor-mode
+      (if (condition-case nil
+              (hs-toggle-hiding)
+            (error t))
+          (hs-show-all))
+    (toggle-selective-display column)))
+
+(global-set-key (kbd "C-+") 'toggle-hiding)
+(global-set-key (kbd "C-\\") 'toggle-selective-display)
+
 ;;---
 (when (and (featurep 'hide-lines)
 	 (load "hidesearch" t))
@@ -58,7 +80,7 @@
       (select-window win)
       (switch-to-buffer "*scratch*"))))
 
-(global-set-key (kbd "<f12> s") 'goto-scratch-buffer-on-botton-window)
+(global-set-key (kbd "<f11> s") 'goto-scratch-buffer-on-botton-window)
 
 ;;---
 
@@ -74,8 +96,10 @@
       (anything-show-kill-ring)
     ad-do-it))
 
-;;--- some programming related
-(load "eassist" t)  ;; for eassist-list-methods, eassist-switch-h-cpp
+;;--- list & choose method
+(require 'idomenu "idomenu" t)  
+(require 'eassist "eassist" t)  ;; for `eassist-list-methods'
+
 (defun hkb-select-method()
   (interactive)
   (cond
@@ -93,10 +117,15 @@
    (t (imenu))))
 
 (global-set-key (kbd "H-]") 'hkb-select-method)
-(global-set-key (kbd "<f3> C-]") 'hkb-select-method)
+(global-set-key (kbd "<f5> C-]") 'hkb-select-method)
+
+;;--- auto-complete
 
 
-;; completion  (Emacs default: M-TAB - lisp-complete-symbol, M-/ - dabbrev-expand)
+;;--- completion
+;; Emacs default:
+;;   M-TAB - lisp-complete-symbol(<24)/completion-at-point(v24)
+;;   M-/ - dabbrev-expand
 
 ;;(if (< emacs-major-version 24)
 ;;    (global-set-key (kbd "H-/") 'lisp-complete-symbol)))
@@ -104,11 +133,18 @@
 ;;(global-set-key (kbd "H-/") 'hippie-expand)
 (global-set-key (kbd "<f12> ;") 'comment-or-uncomment-region)
 
-;;
+;;---
+;; opening server files always in a new frame
+;;http://www.emacswiki.org/emacs/EmacsClient#toc21
+
+(add-hook 'server-switch-hook
+          (lambda nil
+            (let ((server-buf (current-buffer)))
+              (bury-buffer)
+              (switch-to-buffer-other-frame server-buf))))
 
 ;;---
-
-;;; select rectangle using H-mouse-1
+;;; select rectangle using H-mouse-1 (could it work?)
 (require 'cua-rect)	
 (defun hkb-mouse-mark-cua-rectangle (event)
   (interactive "e")
