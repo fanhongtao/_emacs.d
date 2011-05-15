@@ -111,7 +111,7 @@
 
 
 
-(defun insert-cowsay-fortune (&optional cowfile fortune-file)
+(defun insert-cowsay-fortune (cowfile fortune-file)
   "insert a fortune cookie, quoted by a 'cow'."
   (interactive "sCowfile: \nsFortune: ")
   (insert-string "\n")
@@ -171,7 +171,7 @@ If you have no `cowsay', you can turn it off."
             (kill-region (point-min) (point-max))
             (insert-string "--\n")
             (if idle-fortune-use-cowsay
-                (insert-cowsay-fortune)
+                (insert-cowsay-fortune "" "")
               (insert-fortune "")))
           (switch-to-buffer "*fortune*")
           (beginning-of-buffer))))
