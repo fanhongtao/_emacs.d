@@ -4,12 +4,12 @@
 ;; Description: Extensions to `info.el'.
 ;; Author: Drew Adams
 ;; Maintainer: Drew Adams
-;; Copyright (C) 1996-2010, Drew Adams, all rights reserved.
+;; Copyright (C) 1996-2011, Drew Adams, all rights reserved.
 ;; Created: Tue Sep 12 16:30:11 1995
 ;; Version: 21.1
-;; Last-Updated: Tue Oct 19 09:55:11 2010 (-0700)
+;; Last-Updated: Thu Feb 24 15:34:25 2011 (-0800)
 ;;           By: dradams
-;;     Update #: 4374
+;;     Update #: 4459
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/info+.el
 ;; Keywords: help, docs, internal
 ;; Compatibility: GNU Emacs: 20.x, 21.x, 22.x, 23.x
@@ -178,6 +178,12 @@
 ;;
 ;;; Change log:
 ;;
+;; 2011/02/06 dadams
+;;     info-user-option-ref-item: Corrected background for light-bg case.
+;; 2011/02/03 dadams
+;;     All deffaces: Provided default values for dark-background screens too.
+;; 2011/01/04 dadams
+;;     Removed autoload cookies from non def* sexps.  Added for defgroup and defface.
 ;; 2010/05/27 dadams
 ;;     Added: Info-set-mode-line.
 ;;     Info-find-node-2:
@@ -479,6 +485,7 @@
    (defvar Info-isearch-search)
    (defvar Info-menu-entry-name-re)
    (defvar Info-next-link-keymap)
+   (defvar Info-mode-line-node-keymap)
    (defvar Info-node-spec-re)
    (defvar Info-point-loc)
    (defvar Info-prev-link-keymap)
@@ -533,6 +540,7 @@
 
 ;;; FACES ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;###autoload
 (defgroup Info-Plus nil
   "Various enhancements to Info."
   :group 'info
@@ -550,33 +558,46 @@ Don't forget to mention your Emacs and library versions."))
 
 ;; This is defined in `faces.el', Emacs 22+.  This definition is adapted to Emacs 20.
 (unless (facep 'minibuffer-prompt)
-  (defface minibuffer-prompt '((((background dark)) (:foreground "cyan"))
-                               (t (:foreground "dark blue")))
-    "Face for minibuffer prompts."
+  (defface minibuffer-prompt
+      '((((background dark)) (:foreground "cyan"))
+        (t (:foreground "dark blue")))
+    "*Face for minibuffer prompts."
     :group 'basic-faces))
 
-(defface info-file '((t (:foreground "Blue" :background "LightGray")))
-  "Face for file heading labels in `info'." :group 'Info-Plus :group 'faces)
+;;;###autoload
+(defface info-file
+    '((((background dark)) (:foreground "Yellow" :background "DimGray"))
+      (t (:foreground "Blue" :background "LightGray")))
+  "*Face for file heading labels in `info'." :group 'Info-Plus :group 'faces)
 
-(defface info-menu '((t (:foreground "Blue")))
+;;;###autoload
+(defface info-menu
+    '((((background dark)) (:foreground "Yellow"))
+      (t (:foreground "Blue")))
   "*Face used for menu items in `info'." :group 'Info-Plus :group 'faces)
 
 ;; FWIW, I use a `LightSteelBlue' background for `*info*', and I use `yellow' for this face.
+;;;###autoload
 (defface info-quoted-name               ; For `...'
-    '((((background light)) (:inherit font-lock-string-face :foreground "DarkViolet"))
+    '((((background dark)) (:inherit font-lock-string-face :foreground "#6B6BFFFF2C2C")) ; ~ green
+      (((background light)) (:inherit font-lock-string-face :foreground "DarkViolet"))
       (t (:foreground "yellow")))
-  "Face for quoted names (`...') in `info'."
+  "*Face for quoted names (`...') in `info'."
   :group 'Info-Plus :group 'faces)
 
 ;; FWIW, I use a `LightSteelBlue' background for `*info*', and I use `red3' for this face.
+;;;###autoload
 (defface info-string                    ; For "..."
-    '((t (:inherit font-lock-string-face :foreground "red3")))
-  "Face for strings (\"...\") in `info'."
+    '((((background dark)) (:inherit font-lock-string-face :foreground "Orange"))
+      (t (:inherit font-lock-string-face :foreground "red3")))
+  "*Face for strings (\"...\") in `info'."
   :group 'Info-Plus :group 'faces)
 
+;;;###autoload
 (defface info-single-quote              ; For '
-    '((t (:inherit font-lock-keyword-face :foreground "Magenta")))
-  "Face for isolated single-quote marks (') in `info'."
+    '((((background dark)) (:inherit font-lock-keyword-face :foreground "Green"))
+      (t (:inherit font-lock-keyword-face :foreground "Magenta")))
+  "*Face for isolated single-quote marks (') in `info'."
   :group 'Info-Plus :group 'faces)
 
 ;;; These are only for Emacs 20 and 21.
@@ -588,32 +609,36 @@ Don't forget to mention your Emacs and library versions."))
   (set-face-foreground 'info-xref "Blue")
   (set-face-bold-p     'info-xref nil))
 
-;; Standard faces from Emacs 22+ `info.el'.
-;; Use them also for other versions, but without :height and :inherit.
+;; Standard faces from vanilla Emacs `info.el', but without `:weight', `:height' and `:inherit'.
+;;;###autoload
 (defface info-title-1
-    '((((type tty pc) (class color)) :foreground "green" :weight bold))
-  "Face for info titles at level 1."
+    '((((type tty pc) (class color) (background dark))  :foreground "yellow" :weight bold)
+      (((type tty pc) (class color) (background light)) :foreground "brown"  :weight bold))
+  "*Face for info titles at level 1."
   :group (if (facep 'info-title-1) 'info 'Info-Plus))
 ;; backward-compatibility alias
 (put 'Info-title-1-face 'face-alias 'info-title-1)
 
+;;;###autoload
 (defface info-title-2
     '((((type tty pc) (class color)) :foreground "lightblue" :weight bold))
-  "Face for info titles at level 2."
+  "*Face for info titles at level 2."
   :group (if (facep 'info-title-1) 'info 'Info-Plus))
 ;; backward-compatibility alias
 (put 'Info-title-2-face 'face-alias 'info-title-2)
 
+;;;###autoload
 (defface info-title-3
     '((((type tty pc) (class color)) :weight bold))
-  "Face for info titles at level 3."
+  "*Face for info titles at level 3."
   :group (if (facep 'info-title-1) 'info 'Info-Plus))
 ;; backward-compatibility alias
 (put 'Info-title-3-face 'face-alias 'info-title-3)
 
+;;;###autoload
 (defface info-title-4
     '((((type tty pc) (class color)) :weight bold))
-  "Face for info titles at level 4."
+  "*Face for info titles at level 4."
   :group (if (facep 'info-title-1) 'info 'Info-Plus))
 ;; backward-compatibility alias
 (put 'Info-title-4-face 'face-alias 'info-title-4)
@@ -624,37 +649,58 @@ Don't forget to mention your Emacs and library versions."))
                                  (?- info-title-4 italic underline))))
 
 ;;; Faces for highlighting reference items
+;;;###autoload
 (defface info-function-ref-item
-    '((t (:foreground "DarkBlue" :background "LightGray")))
-  "Face used for \"Function:\" reference items in `info' manual."
+    '((((background dark))
+       (:foreground "#4D4DDDDDDDDD" :background "DimGray")) ; ~ cyan
+      (t (:foreground "DarkBlue" :background "LightGray")))
+  "*Face used for \"Function:\" reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
+;;;###autoload
 (defface info-variable-ref-item
-    '((t (:foreground "FireBrick" :background "LightGray")))
-  "Face used for \"Variable:\" reference items in `info' manual."
+    '((((background dark))
+       (:foreground "Orange" :background "DimGray"))
+      (t (:foreground "FireBrick" :background "LightGray")))
+  "*Face used for \"Variable:\" reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
+;;;###autoload
 (defface info-special-form-ref-item
-    '((t (:foreground "DarkMagenta" :background "LightGray")))
-  "Face used for \"Special Form:\" reference items in `info' manual."
+    '((((background dark))
+       (:foreground "Yellow" :background "DimGray")) ; ~ light green
+      (t (:foreground "DarkMagenta" :background "LightGray")))
+  "*Face used for \"Special Form:\" reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
+;;;###autoload
 (defface info-command-ref-item
-    '((t (:foreground "Blue" :background "LightGray")))
-  "Face used for \"Command:\" reference items in `info' manual."
+    '((((background dark)) (:foreground "#7474FFFF7474" :background "DimGray")) ; ~ light green
+      (t (:foreground "Blue" :background "LightGray")))
+  "*Face used for \"Command:\" reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
+;;;###autoload
 (defface info-user-option-ref-item
-    '((t (:foreground "Red" :background "LightGray")))
-  "Face used for \"User Option:\" reference items in `info' manual."
+    '((((background dark)) (:foreground "Red" :background "DimGray"))
+      (t (:foreground "Red" :background "LightGray")))
+  "*Face used for \"User Option:\" reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
+;;;###autoload
 (defface info-macro-ref-item
-    '((t (:foreground "DarkMagenta" :background "LightGray")))
-  "Face used for \"Macro:\" reference items in `info' manual."
+    '((((background dark))
+       (:foreground "Yellow" :background "DimGray")) ; ~ light green
+      (t (:foreground "DarkMagenta" :background "LightGray")))
+  "*Face used for \"Macro:\" reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
+;;;###autoload
 (defface info-syntax-class-item
-    '((t (:foreground "DarkGreen" :background "LightGray")))
-  "Face used for \"Syntax Class:\" reference items in `info' manual."
+    '((((background dark))
+       (:foreground "#FFFF9B9BFFFF" :background "DimGray")) ; ~ pink
+      (t (:foreground "DarkGreen" :background "LightGray")))
+  "*Face used for \"Syntax Class:\" reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
+;;;###autoload
 (defface info-reference-item
-    '((t (:background "LightGray")))
-  "Face used for reference items in `info' manual."
+    '((((background dark)) (:background "DimGray"))
+      (t (:background "LightGray")))
+  "*Face used for reference items in `info' manual."
   :group 'Info-Plus :group 'faces)
 
 
@@ -715,7 +761,6 @@ you want to include, such as form-feed (^L) and newline (^J), with ^Q.
 For example, type `^Q^L^Q^J* ' to set this to \"\\f\\n* \"."
   :type 'string :group 'Info-Plus)
 
-;;;###autoload
 (when (> emacs-major-version 22)
   (defcustom Info-breadcrumbs-in-header-flag nil
     "*Non-nil means breadcrumbs are shown in the header line."
@@ -882,7 +927,6 @@ For example, type `^Q^L^Q^J* ' to set this to \"\\f\\n* \"."
 ;; reason not to use a separate window, if the user, e.g., sets
 ;; `pop-up-windows' or `pop-up-frames' non-nil.
 ;;
-;;;###autoload
 (if (>= emacs-major-version 22)
     (remove-hook 'same-window-regexps "\\*info\\*\\(\\|<[0-9]+>\\)")
   (remove-hook 'same-window-buffer-names "*info*"))
@@ -896,7 +940,6 @@ For example, type `^Q^L^Q^J* ' to set this to \"\\f\\n* \"."
 (put 'Info-goto-emacs-key-command-node 'info-file "emacs")
 
 
-;;;###autoload
 (unless (>= emacs-major-version 22)
   ;; I previously called this `emacs-info', but Emacs 21 came out with this name.
   (defun info-emacs-manual ()
@@ -918,7 +961,6 @@ For example, type `^Q^L^Q^J* ' to set this to \"\\f\\n* \"."
 ;; REPLACE ORIGINAL in `info.el':
 ;; Call `fit-frame' if `Info-fit-frame-flag'.
 ;;
-;;;###autoload
 (when (< emacs-major-version 21)
   (defun Info-find-node (filename nodename &optional no-going-back)
     ;; Go to an info node specified as separate FILENAME and NODENAME.
@@ -1132,7 +1174,6 @@ or file: `%s'"
 ;; REPLACE ORIGINAL in `info.el':
 ;; Call `fit-frame' if `Info-fit-frame-flag'.
 ;;
-;;;###autoload
 (when (eq emacs-major-version 21)
   (defun Info-find-node-2 (filename nodename &optional no-going-back)
     (buffer-disable-undo (current-buffer))
@@ -1259,7 +1300,6 @@ or file: `%s'"
 ;; REPLACE ORIGINAL in `info.el':
 ;; Call `fit-frame' if `Info-fit-frame-flag'.
 ;;
-;;;###autoload
 (when (= emacs-major-version 22)
   (defun Info-find-node-2 (filename nodename &optional no-going-back)
     (buffer-disable-undo (current-buffer))
@@ -1423,7 +1463,6 @@ or file: `%s'"
 ;; REPLACE ORIGINAL in `info.el':
 ;; Call `fit-frame' if `Info-fit-frame-flag'.
 ;;
-;;;###autoload
 (when (> emacs-major-version 22)
   (defun Info-find-node-2 (filename nodename &optional no-going-back)
     (buffer-disable-undo (current-buffer))
@@ -2062,7 +2101,6 @@ to search again for `%s'.")
 ;; 6. If `Info-fontify-quotations-flag', fontify `...' in face `info-quoted-name',
 ;;    "..." in face `info-string', and ' in face `info-single-quote'.
 ;;
-;;;###autoload
 (unless (> emacs-major-version 21)
   (defun Info-fontify-node ()
     (save-excursion
@@ -2131,7 +2169,6 @@ to search again for `%s'.")
 ;; 2. If `Info-fontify-quotations-flag', fontify `...' in face `info-quoted-name',
 ;;    "..." in face `info-string', and ' in face `info-single-quote'.
 ;;
-;;;###autoload
 (when (= emacs-major-version 22)
   (defun Info-fontify-node ()
     "Fontify the node."
@@ -2536,7 +2573,6 @@ to search again for `%s'.")
 ;; 2. If `Info-fontify-quotations-flag', fontify `...' in face `info-quoted-name',
 ;;    "..." in face `info-string', and ' in face `info-single-quote'.
 ;;
-;;;###autoload
 (when (and (> emacs-major-version 22) (not (fboundp 'Info-breadcrumbs))) ; Emacs 23.1, not 23.2+
   (defun Info-fontify-node ()
     "Fontify the node."
@@ -2904,7 +2940,6 @@ to search again for `%s'.")
 ;; 2. If `Info-fontify-quotations-flag', fontify `...' in face `info-quoted-name',
 ;;    "..." in face `info-string', and ' in face `info-single-quote'.
 ;;
-;;;###autoload
 (when (and (> emacs-major-version 22) (fboundp 'Info-breadcrumbs)) ; Emacs 23.2+
   (defun Info-fontify-node ()
     "Fontify the node."
@@ -3379,7 +3414,6 @@ Command:\\|User Option:\\|Macro:\\|Syntax class:\\)\\(.*\\)"
 ;; 1. Fits frame if `one-window-p'.
 ;; 2. Highlights the found regexp if `search-highlight'.
 ;;
-;;;###autoload
 (unless (>= emacs-major-version 22)
   (defun Info-search (regexp)
     "Search for REGEXP, starting from point, and select node it's found in.
@@ -3467,7 +3501,6 @@ To remove the highlighting, just start an incremental search: \
 ;; 1. Fits frame if `one-window-p'.
 ;; 2. Highlights the found regexp if `search-highlight'.
 ;;
-;;;###autoload
 (when (= emacs-major-version 22)
   (defun Info-search (regexp &optional bound noerror count direction)
     "Search for REGEXP, starting from point, and select node it's found in.
@@ -3659,7 +3692,6 @@ To remove the highlighting, just start an incremental search: \
 ;; 1. Fits frame if `one-window-p'.
 ;; 2. Highlights the found regexp if `search-highlight'.
 ;;
-;;;###autoload
 (when (> emacs-major-version 22)
   (defun Info-search (regexp &optional bound noerror count direction)
     "Search for REGEXP, starting from point, and select node it's found in.
@@ -3832,7 +3864,6 @@ To remove the highlighting, just start an incremental search: \
 ;; REPLACES ORIGINAL in `info.el':
 ;; Added optional arg FORK.
 ;;
-;;;###autoload
 (when (>= emacs-major-version 22)
   (defun Info-mouse-follow-nearest-node (click &optional fork)
     "\\<Info-mode-map>Follow a node reference near point.
@@ -3852,7 +3883,6 @@ With a prefix argument, open the node in a separate window."
 ;; Use `Info-mode-syntax-table' (bug #3312).
 ;; Doc string changed: displays all bindings.
 ;;
-;;;###autoload
 (when (< emacs-major-version 21)
   (defun Info-mode ()
     "\\<Info-mode-map>
@@ -3979,7 +4009,6 @@ These are all of the current Info Mode bindings:
 ;; Use `Info-mode-syntax-table' (bug #3312).
 ;; Doc string changed: displays all bindings.
 ;;
-;;;###autoload
 (when (= emacs-major-version 21)
 
   ;; For some reason, this doesn't seem to be bound when `tool-bar.el' is loaded (?) in Emacs 21.
@@ -4116,7 +4145,6 @@ These are all of the current Info Mode bindings:
 ;; Use `Info-mode-syntax-table' (bug #3312).
 ;; Doc string changed: displays all bindings.
 ;;
-;;;###autoload
 (when (= emacs-major-version 22)
   (defun Info-mode ()
     "Provides commands for browsing through the Info documentation tree.
@@ -4271,7 +4299,6 @@ These are all of the current Info Mode bindings:
 ;; Use `Info-mode-syntax-table' (bug #3312).
 ;; Doc string changed: displays all bindings.
 ;;
-;;;###autoload
 (when (> emacs-major-version 22)
   (defun Info-mode ()
     "Provides commands for browsing through the Info documentation tree.
@@ -4444,7 +4471,7 @@ These are all of the current Info Mode bindings:
 
 (when (> emacs-major-version 21)
   (defcustom Info-saved-nodes ()
-    "List of Info node names you can visit using `\\<Info-mode-map>\\[Info-virtual-book]'.
+    "*List of Info node names you can visit using `\\<Info-mode-map>\\[Info-virtual-book]'.
 Each node name is a string.  The node name can be absolute, including
 a filename, such as \"(emacs)Basic\", or it can be relative, such as
 \"Basic\".
