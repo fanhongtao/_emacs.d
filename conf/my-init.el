@@ -157,16 +157,19 @@
 (global-set-key (kbd "<double-down-mouse-1>") 'highlight-symbol-at-point)
 
 (autoload 'highlight-indentation "highlight-indentation" "Toggle highlight indentation." t)
-  
-(autoload 'hideshowvis-mode "hideshowvis" "Add markers to the fringe for regions foldable by `hideshow-mode'." t)
 
-(add-hook 'emacs-lisp-mode-hook 'hideshowvis-mode)
-(add-hook 'python-mode-hook 'hideshowvis-mode)
+
+(autoload 'hideshowvis-enable "hideshowvis" "Add markers to the fringe for regions foldable by `hideshow-mode'." t)
+(autoload 'hideshowvis-minor-mode "hideshowvis" "Will indicate regions foldable with hideshow in the fringe." 'interactive)
+(eval-after-load 'hideshowvis '(load "hideshow-fringe" t))
+
+(add-hook 'emacs-lisp-mode-hook 'hideshowvis-enable)
+(add-hook 'python-mode-hook 'hideshowvis-enable)
 
 ;;(@*)
 
 ;;(@* "misc")
-(require 'help-mode) ;;to prevent error like: "help-setup-xref: Symbol's value as variable is void: help-xref-following"
+
 
  ;;FIXME
 (autoload 'idle-require-mode "idle-require" "Load unloaded autoload functions when Emacs becomes idle." t)
