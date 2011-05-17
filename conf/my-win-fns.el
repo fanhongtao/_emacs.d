@@ -194,7 +194,20 @@ an error is signaled."
         (error "'%s' does not have a visible window" buffer-name)
       (switch-to-buffer buffer-name))))
 
-
+(defun imenu-tree+ (arg)
+  (interactive "P")
+  (imenu-tree arg)
+  (if (featurep 'ide-skel)
+      (add-to-list 'ide-skel-tabbar-hidden-buffer-names-regexp-list "^\\*imenu-tree\\*$"))
+  (let* ( (windows (delq nil (mapcar '(lambda (window)
+                                       (if (equal "*imenu-tree*" (buffer-name (window-buffer window)))
+                                           window
+                                         nil))
+                                  (window-list))))
+          (window (car windows)) )
+    (if window
+        (set-window-dedicated-p window t))))
+    
 
 ;; keys
 
@@ -266,7 +279,8 @@ an error is signaled."
     ;;          (featurep 'sticky-windows)))
     (define-key map (kbd "*") 'sticky-window-keep-window-visible)
     (define-key map (kbd "C-m") 'toggle-one-window)
-
+    (define-key map (kbd "<f11>") 'toggle-one-window)
+    
     ;; override C-x 0 and C-x 1, to regard window-dedicated-p
     (when (fboundp 'sticky-window-delete-window)
         (global-set-key (kbd "C-x 0") 'sticky-window-delete-window)
@@ -281,16 +295,16 @@ an error is signaled."
     ;;
     ;; some special windows
     ;;(when (featurep 'imenu-tree)
-    (define-key map (kbd "S-I") 'imenu-tree)
+    (define-key map (kbd "I") 'imenu-tree+)
 
     ;;(when (featurep 'ide-skel)
-    (define-key map (kbd "S-B") 'ide-skel-toggle-bottom-view-window)
-    (define-key map (kbd "S-R") 'ide-skel-toggle-right-view-window)
-    (define-key map (kbd "S-L") 'ide-skel-toggle-left-view-window)
+    (define-key map (kbd "B") 'ide-skel-toggle-bottom-view-window)
+    (define-key map (kbd "R") 'ide-skel-toggle-right-view-window)
+    (define-key map (kbd "L") 'ide-skel-toggle-left-view-window)
 
-    (define-key map (kbd "S-s") 'speedbar)
+    (define-key map (kbd "s") 'speedbar)
     ;;(if (featurep 'sr-speedbar)
-    (define-key map (kbd "S-S") 'sr-speedbar-toggle)
+    (define-key map (kbd "S") 'sr-speedbar-toggle)
     ))
 
 (init-win-fns-keys "<f11>")
