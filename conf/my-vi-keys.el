@@ -57,6 +57,12 @@ whitespaces of the next line. Otherwise it would kill current word."
       ))
 
 
+(defun kill-line-vi-style ()
+  (interactive)
+  (let (select-active-regions)
+    (deactivate-mark))
+  (kill-whole-line))
+
 ;;---
 (defun init-vi-style-keys (prefix-key)
   (let ( (map (make-sparse-keymap "Vi-style operation")) )
@@ -70,7 +76,11 @@ whitespaces of the next line. Otherwise it would kill current word."
 
     (define-key map (kbd "C-f") 'forward-page)
     (define-key map (kbd "C-b") 'backward-page)
+
+    (define-key map (kbd "y") 'kill-ring-save)
+    (define-key map (kbd "p") 'cua-paste)
     
+
 
     (define-key map (kbd "*") 'hkb-goto-symbol-next-occur)
     (define-key map (kbd "#") 'hkb-goto-symbol-prev-occur)
@@ -80,6 +90,7 @@ whitespaces of the next line. Otherwise it would kill current word."
     (define-key map (kbd "d w") 'kill-word-vi-style)
     (define-key map (kbd "d t") 'zap-to-char)
 ;;    (define-key map (kbd "d f") 'zap-up-to-char)
+    (define-key map (kbd "d d") 'kill-whole-line)
 
     (define-key map (kbd "/") 'isearch-forward-regexp)
     (define-key map (kbd "?") 'isearch-backward-regexp)

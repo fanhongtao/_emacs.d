@@ -1,5 +1,6 @@
 (ignore-errors
-  (require 'bm)
+  (if (require 'bm t)
+      (require 'linkmark))
   (require 'fold-dwim)
   
   (require 'hide-line)
@@ -9,10 +10,15 @@
   (require 'highlight-indentation)
   )
 
+;;--- options
+(global-set-key (kbd "<C-f10> g") 'customize-group)
+(global-set-key (kbd "<C-f10> v") 'customize-variable)
+(global-set-key (kbd "<C-f10> f") 'customize-face)
+(global-set-key (kbd "<C-f10> t") 'customize-themes)
 
-
-;;---
-(when (featurep 'bm)
+;;--- buffer-local bookmarks
+(if (featurep 'bm)
+    (progn
       (global-set-key (kbd "<left-fringe> <C-mouse-1>") 'bm-toggle-mouse)
       (global-set-key (kbd "<left-fringe> <C-mouse-5>") 'bm-next-mouse)
       (global-set-key (kbd "<left-fringe> <C-mouse-4>") 'bm-previous-mouse)
@@ -20,10 +26,22 @@
       (global-set-key (kbd "<f2> t") 'bm-toggle)
       (global-set-key (kbd "<f2> n") 'bm-next)
       (global-set-key (kbd "<f2> p") 'bm-previous)
+      (global-set-key (kbd "<f2> l") 'bm-show)
 
       (if (fboundp 'anything-bm-list)
-	  (global-set-key (kbd "<f2> l") 'anything-bm-list))
+          (global-set-key (kbd "<f2> l") 'anything-bm-list))
       )
+  (if (featurep 'linemark)              ;; linemark.el from CEDET
+      (progn
+        (global-set-key (kbd "<left-fringe> <C-mouse-1>") 'viss-bookmark-toggle)
+        (global-set-key (kbd "<left-fringe> <C-mouse-5>") 'viss-bookmark-next-buffer)
+        (global-set-key (kbd "<left-fringe> <C-mouse-4>") 'viss-bookmark-prev-buffer)
+        
+        (define-key global-map (kbd "<f2> t") 'viss-bookmark-toggle)
+        (define-key global-map (kbd "<f2> n") 'viss-bookmark-prev-buffer)
+        (define-key global-map (kbd "<f2> p") 'viss-bookmark-next-buffer)
+        (define-key global-map (kbd "<f2> c") 'viss-bookmark-clear-all-buffer))
+      ))
 
 ;;---
 ;;TODO: folding
@@ -119,8 +137,9 @@
 (global-set-key (kbd "H-]") 'hkb-select-method)
 (global-set-key (kbd "<f5> C-]") 'hkb-select-method)
 
-;;--- auto-complete
-
+;;--- extend selection incrementally (ergoemacs-functions.el)
+;; http://xahlee.org/emacs/syntax_tree_walk.html
+(global-set-key (kbd "C-.") 'extend-selection)
 
 ;;--- completion
 ;; Emacs default:
@@ -143,6 +162,24 @@
               (bury-buffer)
               (switch-to-buffer-other-frame server-buf))))
 
+;;--- count region
+;; http://xahlee.org/emacs/elisp_count-region.html
+(defun count-region (begin end)
+  "Print number of words and chars in region."
+  (interactive "r")
+  (message "Counting ...")
+  (save-excursion
+    (let (wCnt charCnt)
+      (setq wCnt 0)
+      (setq charCnt (- end begin))
+      (goto-char begin)
+      (while (and (< (point) end)
+                  (re-search-forward "\\w+\\W*" end t))
+        (setq wCnt (1+ wCnt)))
+
+      (message "Words: %d. Chars: %d." wCnt charCnt)
+      )))
+
 ;;---
 ;;; select rectangle using H-mouse-1 (could it work?)
 (require 'cua-rect)	
@@ -151,5 +188,8 @@
   (if (not cua--rectangle)	  
       (cua-mouse-set-rectangle-mark event)
     (cua-mouse-resize-rectangle event)))
-(global-set-key (kbd "<s-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
-(define-key cua--rectangle-keymap (kbd "<s-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
+(global-set-key (kbd "<H-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
+(define-key cua--rectangle-keymap (kbd "<H-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
+
+;;---
+(require 'help-mode) ;;to prevent error like: "help-setup-xref: Symbol's value as variable is void: help-xref-following"

@@ -68,7 +68,7 @@
   :set 'my-word-ops-set-keymap-prefix-key)
 
 
-(defvar my-word-ops-keymap)
+(defvar my-word-ops-keymap (make-sparse-keymap "Operation on current symbol"))
 (define-prefix-command 'my-word-ops-keymap)
 
 (defun init-word-ops-keys ()
@@ -90,6 +90,8 @@
 
     (define-key map (kbd "<f3>") 'isearch-repeat-forward)
     (define-key map (kbd "<S-f3>") 'isearch-repeat-backward)
+
+    (define-key map (kbd "d") 'sdcv-search)
 
    ;; (define-key map (kbd "d") 'sdcv-
     ))
