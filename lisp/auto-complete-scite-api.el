@@ -145,7 +145,7 @@ ac-read-file-dictionary (from auto-complete.el) used to cache the file contents"
   "parse api lines into hashtable \{ac-scite-api--caches}
 
 called on each completion"
-  (message "ac-scite-api-init called")
+;;  (message "ac-scite-api-init called")
   (let* ( (cache (gethash mode-name ac-scite-api--top-caches 'none)) )
     (progn
       ;; read file and update major hash table
@@ -164,7 +164,7 @@ called on each completion"
 
 
 (defun ac-scite-api--candidates-internal (prefix)
-  (message "ac-scite-api-candidates called %s" prefix)
+  ;;(message "ac-scite-api-candidates called %s" prefix)
   (when (and ac-scite-api--cache
 	     (not (eq ac-scite-api--cache 'none)) )	   
     (let ( (key (if (>= (length prefix) ac-scite-api--key-min-length)
