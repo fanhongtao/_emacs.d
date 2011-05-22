@@ -8,15 +8,33 @@
     (require 'sticky-windows nil t))
 ;;(require 'dedicated) ;;A very simple minor mode for dedicated buffers
 
-(require 'transpose-frame nil t) ;; flip window layout within a frame
-(require 'window-numbering nil t) ;; each window has a number in mode-line
+;;(require 'transpose-frame nil t) ;; flip window layout within a frame
+(autoload 'transpose-frame "transpose-frame"  "Transpose windows arrangement at FRAME." t)
+(autoload 'flip-frame "transpose-frame" "Flip windows arrangement vertically at FRAME." t)
+(autoload 'flop-frame "transpose-frame" "Flop windows arrangement horizontally at FRAME." t)
+(autoload 'rotate-frame "transpose-frame" "Rotate windows arrangement 180 degrees at FRAME." t)
+
+;;(require 'window-numbering nil t) ;; each window has a number in mode-line
+(autoload 'window-numbering-mode "window-numbering" "A minor mode that assigns a number to each window" t)
+
 ;;(require 'pack-windows) ;; Resize all windows to display as much info as possible.
+
 ;;(require 'split-root) ;; roote window splitter
+(autoload 'split-root-window "split-root" "Split a window of SIZE lines/columns from the root window." t)
+
 
 ;; for some special buffer
-(require 'imenu-tree nil t)
-(require 'sr-speedbar nil t)
+;;(require 'imenu-tree nil t)
+(autoload 'imenu-tree "imenu-tree" "Display tree view of imenu." t)
+(autoload 'tags-tree "tags-tree" "Display tree view of tags." t)
+
+;;(require 'sr-speedbar nil t)
+(autoload 'sr-speedbar-toggle "sr-speedbar" "Toggle sr-speedbar window" t)
+(autoload 'sr-speedbar-open   "sr-speedbar" "Open the sr-speedbar window" t)
+
 ;;(require 'nav)  ;; emacs-nav
+(autoload 'nav "nav" "Runs nav-mode in a narrow window on the left side" t)
+
 
 
 ;;{{{ window resizing
@@ -296,6 +314,8 @@ an error is signaled."
     ;; some special windows
     ;;(when (featurep 'imenu-tree)
     (define-key map (kbd "I") 'imenu-tree+)
+    (define-key map (kbd "T") 'tags-tree)
+    (define-key map (kbd "N") 'nav)
 
     ;;(when (featurep 'ide-skel)
     (define-key map (kbd "B") 'ide-skel-toggle-bottom-view-window)

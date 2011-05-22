@@ -38,7 +38,8 @@ If DIR is non-nill, shift right. Otherwise, shift left."
 ;; (global-set-key (kbd "<f6> <<") 'shift-left)
 ;; (global-set-key (kbd "<f6> >>") 'shift-right)
       
-;;---
+;;--- FIXME: for continouse whitespaces, it shouldn't delete those before the point
+;;http://www.nujk.com/emacs-command-to-delete-up-to-non-whitespace-character
 (defun kill-word-vi-style (arg)
   "Delete continuous whitespaces or a word.
 
@@ -71,16 +72,20 @@ whitespaces of the next line. Otherwise it would kill current word."
 
     (define-key map (kbd "w") 'forward-word)
     (define-key map (kbd "b") 'backward-word)
-    (define-key map (kbd "^") 'beginning-of-line)
+    (define-key map (kbd "^") 'back-to-indentation)
     (define-key map (kbd "$") 'end-of-line)
+    (define-key map (kbd "g 0") 'beginning-of-line)
 
+    (define-key map (kbd "(") 'backward-sentence)
+    (define-key map (kbd ")") 'forward-sentence)
+    (define-key map (kbd "{") 'backward-paragraph)
+    (define-key map (kbd "}") 'forward-paragraph)
+    
     (define-key map (kbd "C-f") 'forward-page)
     (define-key map (kbd "C-b") 'backward-page)
 
     (define-key map (kbd "y") 'kill-ring-save)
-    (define-key map (kbd "p") 'cua-paste)
-    
-
+    (define-key map (kbd "p") 'cua-paste) ;;compared to `yank', `cua-paste' support register 1-9    
 
     (define-key map (kbd "*") 'hkb-goto-symbol-next-occur)
     (define-key map (kbd "#") 'hkb-goto-symbol-prev-occur)
@@ -88,8 +93,8 @@ whitespaces of the next line. Otherwise it would kill current word."
     (define-key map (kbd "C-]") 'hkb-find-symbol-at-point)
     
     (define-key map (kbd "d w") 'kill-word-vi-style)
-    (define-key map (kbd "d t") 'zap-to-char)
-;;    (define-key map (kbd "d f") 'zap-up-to-char)
+    (define-key map (kbd "d t") 'zap-uo-to-char)
+    (define-key map (kbd "d f") 'zap-to-char)
     (define-key map (kbd "d d") 'kill-whole-line)
 
     (define-key map (kbd "/") 'isearch-forward-regexp)
@@ -102,7 +107,10 @@ whitespaces of the next line. Otherwise it would kill current word."
     (define-key map (kbd "<<") 'shift-left)
 
     (define-key map (kbd "m") 'point-to-register)
-    (define-key map (kbd "`") 'register-to-point)
+    (define-key map (kbd "`") 'register-to-point) ;;` in vi supports register & bookmark
+    (define-key map (kbd "\"p") 'insert-register) ;; "xp (not very good)
+    (define-key map (kbd "\"y") 'copy-to-register) ;; "xy (not very good)
+    (define-key map (kbd "M") 'bookmark-set) 
 ))
     
 

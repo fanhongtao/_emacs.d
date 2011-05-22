@@ -1,22 +1,31 @@
-(ignore-errors
-  (if (require 'bm t)
-      (require 'linkmark))
-  (require 'fold-dwim)
-  
-  (require 'hide-line)
-  (require 'hidesearch)
-  
-  (require 'highlight-symbol)
-  (require 'highlight-indentation)
-  )
-
+ 
 ;;--- options
 (global-set-key (kbd "<C-f10> g") 'customize-group)
 (global-set-key (kbd "<C-f10> v") 'customize-variable)
 (global-set-key (kbd "<C-f10> f") 'customize-face)
 (global-set-key (kbd "<C-f10> t") 'customize-themes)
 
+;;--- some elisp commands
+(global-set-key (kbd "<f3> f") 'find-function-at-point)
+(global-set-key (kbd "<f3> F") 'find-function)
+(global-set-key (kbd "<f3> v") 'find-variable-at-point)
+(global-set-key (kbd "<f3> V") 'find-variable)
+(global-set-key (kbd "<f3> l") 'find-library)
+(global-set-key (kbd "<f3> C-f") 'ffap-other-window)
+
+(global-set-key (kbd "<f12> l l") 'load-library)
+(global-set-key (kbd "<f12> l t") 'load-theme)
+
+(global-set-key (kbd "<f12> e b") 'eval-buffer)
+(global-set-key (kbd "<f12> e r") 'eval-region)
+(global-set-key (kbd "<f12> e f") 'eval-defun)
+(global-set-key (kbd "<f12> e s") 'eval-sexp)
+
 ;;--- buffer-local bookmarks
+(ignore-errors
+  (or (require 'bm nil t)
+      (require 'linkmark nil t))
+  )
 (if (featurep 'bm)
     (progn
       (global-set-key (kbd "<left-fringe> <C-mouse-1>") 'bm-toggle-mouse)
@@ -45,11 +54,16 @@
 
 ;;---
 ;;TODO: folding
-(global-set-key (kbd "H-=") 'fold-dwim-toggle)
-(global-set-key (kbd "H-+") 'fold-dwim-show-all)
-(global-set-key (kbd "H-_") 'fold-dwim-hide-all)
 
-(when (featurep 'fold-dwim)
+(autoload 'fold-dwim-toggle "fold-dwim" "Toggle folding at point." t)
+(autoload 'fold-dwim-show-all "fold-dwim")
+(autoload 'fold-dwm-hide-all   "fold-dwim")
+
+(global-set-key (kbd "C-c +") 'fold-dwim-toggle)
+(global-set-key (kbd "C-c C-+") 'fold-dwim-show-all)
+(global-set-key (kbd "C-c C--") 'fold-dwim-hide-all)
+
+(when (locate-library "fold-dwim")
       ;; FIXME: fold-dwim-toggle would fold/unfold on cursor, not the mouse point
       (global-set-key (kbd "<left-fringe><mouse-1>") 'fold-dwim-toggle)
       )
@@ -73,18 +87,16 @@
           (hs-show-all))
     (toggle-selective-display column)))
 
-(global-set-key (kbd "C-+") 'toggle-hiding)
-(global-set-key (kbd "C-\\") 'toggle-selective-display)
+(global-set-key (kbd "C-c \\") 'toggle-selective-display)
+;;(global-set-key (kbd "C-+") 'toggle-hiding)
 
-;;---
-(when (and (featurep 'hide-lines)
-	 (load "hidesearch" t))
-      (global-set-key (kbd "C-c C-s") 'hidesearch)
-      (global-set-key (kbd "C-c C-a") 'show-all-invisible)
+;;--- hidesearch
+(autoload 'hidesearch "hidesearch" "Incrementally show only lines in file based on what user types." t)
+(autoload 'show-all-invisible "hide-lines" "Show all areas hidden by the filter-buffer command". t)
+(autoload 'hide-non-matching-lines "hide-lines" "Hide lines that don't match the specified regexp." t)
 
-      (global-set-key (kbd "<f12> C-s") 'hidesearch)
-      (global-set-key (kbd "<f12> C-a") 'show-all-invisible)
-      )
+(global-set-key (kbd "C-c C-s") 'hidesearch)
+(global-set-key (kbd "C-c C-a") 'show-all-invisible)
 
 ;;---
 
@@ -100,7 +112,6 @@
 
 (global-set-key (kbd "<f11> s") 'goto-scratch-buffer-on-botton-window)
 
-;;---
 
 ;; http://dev.ariel-networks.com/articles/emacs/part4/
 ;; anything-show-kill-ring を聞うように俐屎した
@@ -134,12 +145,13 @@
      (eassist-list-methods) )
    (t (imenu))))
 
-(global-set-key (kbd "H-]") 'hkb-select-method)
-(global-set-key (kbd "<f5> C-]") 'hkb-select-method)
+(global-set-key (kbd "C-c C-o") 'hkb-select-method)
+(global-set-key (kbd "<f5> I") 'hkb-select-method)
 
 ;;--- extend selection incrementally (ergoemacs-functions.el)
 ;; http://xahlee.org/emacs/syntax_tree_walk.html
 (global-set-key (kbd "C-.") 'extend-selection)
+;; see also: mark-sexp (C-M-SPC), mark-word (M-@)
 
 ;;--- completion
 ;; Emacs default:
@@ -148,9 +160,8 @@
 
 ;;(if (< emacs-major-version 24)
 ;;    (global-set-key (kbd "H-/") 'lisp-complete-symbol)))
-(global-set-key (kbd "H-/") 'completion-at-point)
+;;(global-set-key (kbd "H-/") 'completion-at-point)
 ;;(global-set-key (kbd "H-/") 'hippie-expand)
-(global-set-key (kbd "<f12> ;") 'comment-or-uncomment-region)
 
 ;;---
 ;; opening server files always in a new frame
@@ -164,6 +175,7 @@
 
 ;;--- count region
 ;; http://xahlee.org/emacs/elisp_count-region.html
+;; see also: M-= (M-x count-lines-region)
 (defun count-region (begin end)
   "Print number of words and chars in region."
   (interactive "r")
@@ -188,8 +200,7 @@
   (if (not cua--rectangle)	  
       (cua-mouse-set-rectangle-mark event)
     (cua-mouse-resize-rectangle event)))
-(global-set-key (kbd "<H-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
-(define-key cua--rectangle-keymap (kbd "<H-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
+(global-set-key (kbd "<A-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
+(define-key cua--rectangle-keymap (kbd "<A-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
 
-;;---
-(require 'help-mode) ;;to prevent error like: "help-setup-xref: Symbol's value as variable is void: help-xref-following"
+;;TODO: tempbuf
