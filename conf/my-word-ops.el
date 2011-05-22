@@ -1,7 +1,6 @@
 ;; some commands for the symbol/word at point
 
 (require 'highlight-symbol)
-(require 'anything-config)
 
 (defun hkb-goto-symbol-occurrence (forward)
   (let ( (symbol (highlight-symbol-get-symbol)) )
@@ -91,7 +90,7 @@
     (define-key map (kbd "<f3>") 'isearch-repeat-forward)
     (define-key map (kbd "<S-f3>") 'isearch-repeat-backward)
 
-    (define-key map (kbd "d") 'sdcv-search)
+    (define-key map (kbd "d") 'sdcv-search) ;;sdcv-mode.el needed
 
    ;; (define-key map (kbd "d") 'sdcv-
     ))

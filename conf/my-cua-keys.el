@@ -1,7 +1,8 @@
 ;; CUA-like editing
 
-(load "ergoemacs-functions" t) ;;for new-empty-buffer & close-current-buffer
-
+;; functions.el from ergoemacs 
+(autoload 'new-empty-buffer "ergoemacs-functions" "Opens a new empty buffer." t)
+(autoload 'close-current-buffer "ergoemacs-functions" "Close the current buffer." t)
 
 
 (defvar my-cua-like-keymap (make-sparse-keymap "CUA-like operations"))
