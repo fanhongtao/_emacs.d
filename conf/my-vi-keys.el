@@ -15,6 +15,14 @@ vi style of % jumping to matching brace."
   (interactive)
   (delete-indentation 1))
 
+(defun open-next-line ()
+  (interactive)
+  (if (eobp)
+      (newline-and-indent)
+    (progn
+      (next-line)
+      (open-line 1))))
+
 ;;(global-set-key (kbd "<f6> J") 'join-line)
 
 ;;---
@@ -93,7 +101,7 @@ whitespaces of the next line. Otherwise it would kill current word."
     (define-key map (kbd "C-]") 'hkb-find-symbol-at-point)
     
     (define-key map (kbd "d w") 'kill-word-vi-style)
-    (define-key map (kbd "d t") 'zap-uo-to-char)
+    (define-key map (kbd "d t") 'zap-up-to-char)
     (define-key map (kbd "d f") 'zap-to-char)
     (define-key map (kbd "d d") 'kill-whole-line)
 
@@ -103,14 +111,17 @@ whitespaces of the next line. Otherwise it would kill current word."
     (define-key map (kbd "N") 'isearch-repeat-backward)
 
     (define-key map (kbd "J") 'join-line)
-    (define-key map (kbd ">>") 'shift-right)
-    (define-key map (kbd "<<") 'shift-left)
+    (define-key map (kbd "> >") 'shift-right)
+    (define-key map (kbd "< <") 'shift-left)
 
     (define-key map (kbd "m") 'point-to-register)
     (define-key map (kbd "`") 'register-to-point) ;;` in vi supports register & bookmark
     (define-key map (kbd "\"p") 'insert-register) ;; "xp (not very good)
     (define-key map (kbd "\"y") 'copy-to-register) ;; "xy (not very good)
-    (define-key map (kbd "M") 'bookmark-set) 
+    (define-key map (kbd "M") 'bookmark-set)
+
+    (define-key map (kbd "g g") 'beginning-of-buffer)
+    (define-key map (kbd "G") 'end-of-buffer)
 ))
     
 

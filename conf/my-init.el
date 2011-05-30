@@ -33,20 +33,13 @@
 (global-unset-key (kbd "<f2>"))
 (global-unset-key (kbd "<f3>"))
 (global-unset-key (kbd "<f4>"))
-(global-set-key (kbd "<f3> f") 'find-function-at-point)
-(global-set-key (kbd "<f3> F") 'find-function)
-(global-set-key (kbd "<f3> v") 'find-variable-at-point)
-(global-set-key (kbd "<f3> V") 'find-variable)
-(global-set-key (kbd "<f3> l") 'find-library)
-(global-set-key (kbd "<f3> C-f") 'ffap-other-window)
-
 
 
 
 
 ;;(@* "editing")
 ;; make M-z behave more as zap-up-to-char
-(defun zap-uo-to-char (arg char)
+(defun zap-up-to-char (arg char)
     "Kill up to the ARG'th occurence of CHAR, and leave CHAR.
   The CHAR is replaced and the point is put before CHAR."
     (interactive "p\ncZap to char: ")
@@ -102,7 +95,11 @@
     (add-hook 'choose-completion-string-functions 'ido-choose-completion-string))
   )
 (setq ido-everywhere t)
+(setq ido-enable-flex-matching t)
 (ido-mode t)
+
+(setq ido-use-filename-at-point 'guess)
+(setq ido-use-url-at-point 'guess)
 
 (autoload 'idomenu "idomenu" "Switch to a buffer-local tag from Imenu via Ido." t)
 
@@ -148,14 +145,6 @@
         (add-to-list 'ac-sources 'ac-source-scite-api))
       )
 
-;; use `pos-tip' to fix the popup window position issue
-(when (require 'popup-pos-tip)
-  (defadvice popup-tip
-    (around popup-pos-tip-wrapper (string &rest args) activate)
-    (if (eq window-system 'x)
-        (apply 'popup-pos-tip string args)
-      ad-do-it)))
-
 
 ;;(@* "viper")
 (ignore-errors
@@ -184,8 +173,9 @@
 ;; as this would mess up the tab group definition of `ide-skel'
 (when (or (featurep 'tabbar)
           (load "tabbar" t))
-      (global-set-key (kbd "<C-tab>") 'tabbar-forward)
-      (global-set-key (kbd "<C-S-tab>") 'tabbar-backward))
+  (tabbar-mode t)
+  (global-set-key (kbd "<C-tab>") 'tabbar-forward)
+  (global-set-key (kbd "<C-S-tab>") 'tabbar-backward))
 
 
 ;;(@* "code folding")
@@ -195,9 +185,12 @@
 (eval-after-load 'hideshowvis '(load "hideshow-fringe" t))
 
 (add-hook 'emacs-lisp-mode-hook 'hideshowvis-enable)
-(add-hook 'python-mode-hook 'hideshowvis-enable)
 
-(define-key hs-minor-mode-map (kbd "C-+")  'hs-toggle-hiding)
+(eval-after-load 'python
+  (add-hook 'python-mode-hook 'hideshowvis-enable)
+
+(eval-after-load 'hideshow
+  (define-key hs-minor-mode-map (kbd "C-+")  'hs-toggle-hiding))
 
 
 ;;(@* "some visual effect")
@@ -205,6 +198,10 @@
 (global-set-key (kbd "<double-down-mouse-1>") 'highlight-symbol-at-point)
 
 (autoload 'highlight-indentation "highlight-indentation" "Toggle highlight indentation." t)
+
+(autoload 'idle-highlight "idle-highlight" nil t)
+
+(autoload 'rainbow-delimiters "rainbow-delimiters" nil t)
 
 
 ;;-- linkd: visualize section header & links (to file/man/info/url)
@@ -220,7 +217,8 @@
 ;;(@* "misc")
 
 (setq rj-column-threshold 100)
-(load "recent-jump" t)
+(if (load "recent-jump" t)
+    (recent-jump-mode t))
 (global-set-key (kbd "C-c <") 'recent-jump-backward)
 (global-set-key (kbd "C-c >") 'recent-jump-forward)
 

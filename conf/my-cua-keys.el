@@ -17,7 +17,7 @@
     (define-key map (kbd "<C-f4>") 'close-current-buffer) ;;from ergoemacs
     (define-key map (kbd "C-o") 'menu-find-file-existing)
     (define-key map (kbd "C-s") 'save-buffer)
-    (define-key map (kbd "C-w") 'write-file)  ;; save as
+;;    (define-key map (kbd "C-w") 'write-file)  ;; save as
 
     ;; edit
     (define-key map (kbd "C-c") 'kill-ring-save) ;; copy

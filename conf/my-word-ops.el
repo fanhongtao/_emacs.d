@@ -82,17 +82,17 @@
     (define-key map (kbd "o") 'hkb-occur-at-point)
     (define-key map (kbd "O") 'hkb-multi-occur-at-point)
 
-    (define-key map (kbd "f") 'find-function-at-point)
-    (define-key map (kbd "v") 'find-variable-at-point)
-    (define-key map (kbd "l") 'find-library)
-    (define-key map (kbd "F") 'ffap-other-window)
+    ;; (define-key map (kbd "f") 'find-function-at-point)
+    ;; (define-key map (kbd "v") 'find-variable-at-point)
+    ;; (define-key map (kbd "l") 'find-library)
+    ;; (define-key map (kbd "C-f") 'ffap-other-window)
 
     (define-key map (kbd "<f3>") 'isearch-repeat-forward)
     (define-key map (kbd "<S-f3>") 'isearch-repeat-backward)
 
+    (autoload 'sdcv-search "sdcv-mode" nil t)
     (define-key map (kbd "d") 'sdcv-search) ;;sdcv-mode.el needed
 
-   ;; (define-key map (kbd "d") 'sdcv-
     ))
 
 (init-word-ops-keys)

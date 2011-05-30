@@ -17,12 +17,12 @@
   (package-initialize))
 
 (when (file-exists-p "~/.emacs.d/site-lisp/site-start.el")
-  (load "~/.demacs.d/site-lisp/site-start"))
+  (load "~/.demacs.d/site-lisp/site-start.el"))
 
 
 ;; leave customization & os/distro/installation-specific settings to another file
 ;; (customizations, paths, theme)
-(setq custom-file "~/.emacs.d/custom.el")
+(setq custom-file "~/.emacs.d/customize.el")
 (if (file-exists-p custom-file)
     (load custom-file))
 
@@ -32,7 +32,9 @@
 ;;{{{ some basic settings
 (fset 'yes-or-no-p 'y-or-n-p)
 
-(tool-bar-mode -1)
+(if (fboundp 'tool-bar-mode)
+    (tool-bar-mode -1))
+
 (setq frame-title-format '("%b (%m) - Emacs "
 			   (:eval emacs-version)))
 
@@ -64,6 +66,8 @@
 ;;(setq cua-rectangle-modifier-key 'hyper)  ;;leave C-RET
 (cua-mode)
 
+
+
 (if (<= emacs-major-version 23) ;; emacs < 23.2
      (setq tab-always-indent nil)
    (setq tab-always-indent 'complete)) ;; emacs >= 23.2
@@ -72,12 +76,19 @@
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 
+
+
 (global-set-key (kbd "C-m") 'newline-and-indent)
 (global-set-key (kbd "C-j") 'newline)
+(global-set-key (kbd "C-=") 'align-regexp)
 
 (global-set-key (kbd "M-/") 'hippie-expand)
 
 (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
+(global-set-key (kbd "S-RET") 'insert-new-comment-line)
+
+(global-set-key (kbd "C-c C-w") 'toggle-truncate-lines)
+(global-set-key (kbd "C-c RET") 'cua-set-rectangle-mark)
 
 (global-set-key (kbd "<C-tab>") 'previous-buffer)
 (global-set-key (kbd "<C-S-tab>") 'next-buffer)
@@ -86,3 +97,16 @@
 
 
 (load "~/.emacs.d/conf/my-init.el")
+
+
+;;{{{ generate autoload and load them
+(defun generate-dir-autoload-and-load (top-dir)
+  (let ( (generated-autoload-file "~/.emacs.d/autoloads.el") )
+    (mapc '(lambda (dir)
+             (update-autoloads-from-directories dir))
+          '("e:/emacs/site-lisp/misc_"
+            "e:/emacs/site-lisp/filetype_"
+            "e:/emacs/site-lisp/prog_"
+            "e:/emacs/site-lisp/win32_"
+            ))
+    (load-file generated-autoload-file)))
