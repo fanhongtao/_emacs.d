@@ -13,7 +13,7 @@
   ;;(setq w32-lwindow-modifier 'super)
   
   (setq w32-lwindow-modifier 'nil)
-  (setq w32-pass-lwindow-to-system nil)
+  (setq w32-pass-lwindow-to-system t) ;;if set to nil, a single press <lwindow> would prevent Start Menu
   (define-key key-translation-map (kbd "<lwindow>") (kbd "<f11>"))
 
   ;; (setq w32-rwindow-modifier 'alt)      
@@ -67,13 +67,13 @@
 
 (if (load "drag-stuff" t)
     (progn
+;;    (setq drag-stuff-modifier 'hyper)
+      (add-to-list 'drag-stuff-except-modes 'org-mode)
+      (drag-stuff-global-mode t))
+  (progn
       (global-set-key (kbd "<M-up>") 'swap-line-up)
       (global-set-key (kbd "<M-down>") 'swap-line-down)
       )
-  (progn
-;;    (setq drag-stuff-modifier 'hyper)
-    (add-to-list 'drag-stuff-except-modes 'org-mode)
-    (drag-stuff-global-mode t)))
 
 
 ;; vi-style join-line
@@ -82,7 +82,7 @@
   (interactive)
   (delete-indentation 1))
 
-(global-set-key (kbd "C-c j") 'join-line)
+(global-set-key (kbd "C-c J") 'join-line)
 
 ;;(@* "completion")
 
@@ -104,30 +104,34 @@
 (autoload 'idomenu "idomenu" "Switch to a buffer-local tag from Imenu via Ido." t)
 
 ;;-- smex : ido for M-x
-(when (require 'smex nil t)
-  (smex-initialize)
+(if (require 'smex nil t)
+    (progn
+      (smex-initialize)
   
-  (global-set-key (kbd "M-x") 'smex)
-  (global-set-key (kbd "M-X") 'smex-major-mode-commands)
-  ;; This is your old M-x.
-  (global-set-key (kbd "ESC M-x") 'execute-extended-command))
+      (global-set-key (kbd "M-x") 'smex)
+      (global-set-key (kbd "M-X") 'smex-major-mode-commands)
+      ;; This is your old M-x.
+      (global-set-key (kbd "ESC M-x") 'execute-extended-command)))
+  (message "%s: failed to load `smex'." load-file-name))
 
 
 ;;-- anything
-(when (and (load "anything" t)
-	  (load "anything-config" t))
-  ;;enable multiple keyword/regexp match
-  ;;(load "anything-match-plugin" t) ;;FIXME: would cause crash?
-  ;;(global-set-key (kbd "M-x") 'anything-M-x)
+(if (and (load "anything" t)
+         (load "anything-config" t))
+    (progn
+      ;;enable multiple keyword/regexp match
+      ;;(load "anything-match-plugin" t) ;;FIXME: would cause crash?
+      ;;(global-set-key (kbd "M-x") 'anything-M-x)
   
-  (global-set-key (kbd "<f5> r") 'anything-recentf)
-  (global-set-key (kbd "<f5> b") 'anything-buffers+)
-  (global-set-key (kbd "<f5> B") 'anything-bookmarks)
-  (global-set-key (kbd "<f5> l") 'anything-locate)
-  (global-set-key (kbd "<f5> c") 'anything-browse-code)
-  (global-set-key (kbd "<f5> i") 'anything-imenu)
-  (global-set-key (kbd "<f5> o") 'anything-occur)
-  )
+      (global-set-key (kbd "<f5> r") 'anything-recentf)
+      (global-set-key (kbd "<f5> b") 'anything-buffers+)
+      (global-set-key (kbd "<f5> B") 'anything-bookmarks)
+      (global-set-key (kbd "<f5> l") 'anything-locate)
+      (global-set-key (kbd "<f5> c") 'anything-browse-code)
+      (global-set-key (kbd "<f5> i") 'anything-imenu)
+      (global-set-key (kbd "<f5> o") 'anything-occur)
+      )
+  (message "%s: failed to load `anything'." load-file-name))
 
 ;;--- dabbrev 
 (autoload 'dabbrev-expand-multiple "dabbrev-expand-multiple" "dynamic abbrev expansion for multiple selection" t)
@@ -135,21 +139,25 @@
 (global-set-key (kbd "C-c /") 'dabbrev-expand-multiple)
 
 ;;-- auto-compelte
-(when (and (load "auto-complete" t)
-	  (load "auto-complete-config" t))
-    
+(if (and (load "auto-complete" t)
+         (load "auto-complete-config" t))
+    (progn
       (ac-config-default)
       (add-hook 'lisp-interaction-mode 'ac-emacs-lisp-mode-setup)
 
-      (when (load "auto-complete-scite-api" t)
-        (add-to-list 'ac-sources 'ac-source-scite-api))
-      )
+      (if (load "auto-complete-scite-api" t)
+          (add-to-list 'ac-sources 'ac-source-scite-api)
+        (message "%s: failed to load `auto-complete-scite-api'." load-file-name)))
+  (message "%s: failed to load `auto-complete'." load-file-name))
 
 
 ;;(@* "viper")
-(ignore-errors
-  (require 'undo-tree)
-  (global-undo-tree-mode))
+(if (require 'undo-tree nil 'noerror)
+    (progn
+      (global-undo-tree-mode t)
+      (global-set-key (kbd "C-c C-z") 'undo-tree-undo)
+      (global-set-key (kbd "C-c C-y") 'undo-tree-redo))
+  (message "%s: failed to load `undo-tree'."  load-file-name))
 
 (eval-after-load 'viper
   '(require 'vimpulse))
@@ -187,7 +195,7 @@
 (add-hook 'emacs-lisp-mode-hook 'hideshowvis-enable)
 
 (eval-after-load 'python
-  (add-hook 'python-mode-hook 'hideshowvis-enable)
+  (add-hook 'python-mode-hook 'hideshowvis-enable))
 
 (eval-after-load 'hideshow
   (define-key hs-minor-mode-map (kbd "C-+")  'hs-toggle-hiding))
@@ -205,20 +213,24 @@
 
 
 ;;-- linkd: visualize section header & links (to file/man/info/url)
-(when (require 'linkd nil t)
-  (let ( (dir (concat (file-name-directory (locate-library "linkd")) "icons")) )
-    (when (file-exists-p dir)
-        (setq linkd-icons-directory dir)
-      (setq linkd-use-icons t)))
-  (add-hook 'emacs-lisp-mode-hook 'linkd-enable)
-  (add-hook 'python-mode-hook 'linkd-enable)
-  (add-hook 'espresso-mode-hook 'linkd-enable))
+(if (require 'linkd nil t)
+    (progn
+      (let ( (dir (concat (file-name-directory (locate-library "linkd")) "icons")) )
+        (when (file-exists-p dir)
+          (setq linkd-icons-directory dir)
+          (setq linkd-use-icons t)))
+      (add-hook 'emacs-lisp-mode-hook 'linkd-enable)
+      (add-hook 'python-mode-hook 'linkd-enable)
+      (add-hook 'espresso-mode-hook 'linkd-enable))
+  (message "%s: failed to load `linkd'." load-file-name))
+
 
 ;;(@* "misc")
-
 (setq rj-column-threshold 100)
 (if (load "recent-jump" t)
-    (recent-jump-mode t))
+    (recent-jump-mode t)
+  (message "%s: failed to load `linkd'." load-file-name))
+
 (global-set-key (kbd "C-c <") 'recent-jump-backward)
 (global-set-key (kbd "C-c >") 'recent-jump-forward)
 

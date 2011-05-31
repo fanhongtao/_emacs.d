@@ -231,7 +231,8 @@ See: `forward-block'"
 (global-set-key (kbd "<A-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
 (define-key cua--rectangle-keymap (kbd "<A-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
 
-;;TODO: tempbuf
+
+;;(@* "tempbuf" *)
 ;;(autoload 'turn-on-tempbuf-mode "tempbuf")
 (when (load "tempbuf" t)
   (add-hook 'dired-mode-hook 'turn-on-tempbuf-mode)
@@ -239,6 +240,30 @@ See: `forward-block'"
   (add-hook 'w3-mode-hook 'turn-on-tempbuf-mode)
   (add-hook 'Man-mode-hook 'turn-on-tempbuf-mode)
   (add-hook 'view-mode-hook 'turn-on-tempbuf-mode))
+
+
+;;(@* "org-mode")
+
+(defun org-quote-region (begin end)
+  (interactive "r")
+  (if (not (and transient-mark-mode mark-active))
+      (error "You should make a region")
+    (let* ( (choices '("SRC" "EXAMPLE" "QUOTE" "HTML" "VERSE" "COMMENT" "LATEX"
+                    "*" "_" "/" "=" "~"
+                    ))
+            (choice (ido-completing-read "With:" choices)) )
+      (if (member choice '("*" "_" "/" "=" "~"))
+          (progn
+            (goto-char end)
+            (insert-string choice)
+            (goto-char begin)
+            (insert-string choice))
+        (progn
+          (goto-char end)
+          (insert-string (concat "\n#+END_" choice "\n"))
+          (goto-char begin)
+          (insert-string (concat "#+BEGIN_" choice "\n")))))))
+
 
 ;;---
 ;; use `pos-tip' to fix the popup window position issue

@@ -1,4 +1,9 @@
-
+;; vi-style keys
+;;
+;; http://www.emacswiki.org/emacs/ViEmacsTable
+;; http://www.emacswiki.org/emacs/ViKeys
+;; http://www.emacswiki.org/emacs/RecenterLikeVi
+;; http://grok2.tripod.com/   Emacs for vi users
 
 ;;---
 ;; http://www.emacswiki.org/emacs/ParenthesisMatching
@@ -15,6 +20,7 @@ vi style of % jumping to matching brace."
   (interactive)
   (delete-indentation 1))
 
+;; http://www.emacswiki.org/emacs/OpenNextLine
 (defun open-next-line ()
   (interactive)
   (if (eobp)
@@ -46,7 +52,16 @@ If DIR is non-nill, shift right. Otherwise, shift left."
 ;; (global-set-key (kbd "<f6> <<") 'shift-left)
 ;; (global-set-key (kbd "<f6> >>") 'shift-right)
       
-;;--- FIXME: for continouse whitespaces, it shouldn't delete those before the point
+
+(defun kill-forward-whitespaces ()
+  "Kill the whitespaces from the current position until the next
+non-whitespace character"
+  (interactive)
+  (let ((start-point (point))
+	(end (skip-chars-forward " \t\n\r")))
+    (kill-region start-point (+ end start-point))
+  ))
+
 ;;http://www.nujk.com/emacs-command-to-delete-up-to-non-whitespace-character
 (defun kill-word-vi-style (arg)
   "Delete continuous whitespaces or a word.
@@ -59,7 +74,8 @@ whitespaces of the next line. Otherwise it would kill current word."
   (let ( (char (char-after (point))))
     (if (or (char-equal char ?\x020)
             (char-equal char ?\t))
-        (delete-horizontal-space)
+        ;;(delete-horizontal-space)
+        (kill-forward-whitespaces)
        (if (eolp)
           (delete-indentation t)
         (kill-word arg)))
