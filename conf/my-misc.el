@@ -5,6 +5,35 @@
 (global-set-key (kbd "<C-f10> f") 'customize-face)
 (global-set-key (kbd "<C-f10> t") 'customize-themes)
 
+(global-set-key (kbd "<C-10> F") 'menu-set-font)
+
+(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
+(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+
+;;--- minor mode
+(global-unset-key (kbd "<f10>"))
+(global-set-key (kbd "<f10> <f10>") 'menu-bar-open)
+
+(global-set-key (kbd "<f10> p") 'show-paren-mode)
+(global-set-key (kbd "<f10> w") 'whitespace-mode)
+(global-set-key (kbd "<f10> h") 'hs-minor-mode)
+(global-set-key (kbd "<f10> o") 'outline-minor-mode)
+
+
+;; 3rd-party modules
+(global-set-key (kbd "<f10> c") 'auto-complete-mode)
+
+(autoload 'highlight-indentation "highlight-indentation" "Toggle highlight indentation." t)
+(autoload 'idle-highlight "idle-highlight" nil t)
+(autoload 'rainbow-delimiters "rainbow-delimiters" nil t)
+(autoload 'visible-mark-mode "visible-mark" nil t)
+
+(global-set-key (kbd "<f10> i") 'highlight-indentation)
+(global-set-key (kbd "<f10> h") 'idle-highlight)
+(global-set-key (kbd "<f10> r") 'rainbow-delimiters)
+(global-set-key (kbd "<f10> m") 'visibile-mark-mode)
+
+
 ;;--- some elisp commands
 (global-set-key (kbd "<f3> f") 'find-function-at-point)
 (global-set-key (kbd "<f3> F") 'find-function)
@@ -13,6 +42,7 @@
 (global-set-key (kbd "<f3> l") 'find-library)
 (global-set-key (kbd "<f3> C-f") 'ffap-other-window)
 
+
 (global-set-key (kbd "<f12> l l") 'load-library)
 (global-set-key (kbd "<f12> l t") 'load-theme)
 
@@ -20,6 +50,20 @@
 (global-set-key (kbd "<f12> e r") 'eval-region)
 (global-set-key (kbd "<f12> e f") 'eval-defun)
 (global-set-key (kbd "<f12> e s") 'eval-sexp)
+
+(defun check-parens+ ()
+  (interactive)
+  (if (check-parens)
+      (message "%s: OK" (buffer-file-name))))
+
+(define-key emacs-lisp-mode-map (kbd "<M-f9>") 'check-parens+)
+
+(defun byte-compile-file+ ()
+   (interactive)
+   (byte-compile-file (buffer-file-name)))
+
+(define-key emacs-lisp-mode-map (kbd "<C-f9>") 'byte-compile-file+)
+      
 
 ;;--- buffer-local bookmarks
 (ignore-errors
@@ -92,7 +136,7 @@
 
 ;;--- hidesearch
 (autoload 'hidesearch "hidesearch" "Incrementally show only lines in file based on what user types." t)
-(autoload 'show-all-invisible "hide-lines" "Show all areas hidden by the filter-buffer command". t)
+(autoload 'show-all-invisible "hide-lines" "Show all areas hidden by the filter-buffer command" t)
 (autoload 'hide-non-matching-lines "hide-lines" "Hide lines that don't match the specified regexp." t)
 
 (global-set-key (kbd "C-c C-s") 'hidesearch)
@@ -243,6 +287,7 @@ See: `forward-block'"
 
 
 ;;(@* "org-mode")
+(setq org-CUA-compatible t)
 
 (defun org-quote-region (begin end)
   (interactive "r")
@@ -274,3 +319,5 @@ See: `forward-block'"
         (apply 'popup-pos-tip string args)
       ad-do-it)))
 
+
+;;TODO: (@* "cygwin")

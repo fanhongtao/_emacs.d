@@ -33,6 +33,7 @@
 (global-unset-key (kbd "<f2>"))
 (global-unset-key (kbd "<f3>"))
 (global-unset-key (kbd "<f4>"))
+(global-unset-key (kbd "<f10>"))
 
 
 
@@ -48,6 +49,31 @@
     (forward-char -1))
 
 (global-set-key (kbd "M-z") 'zap-up-to-char)
+
+(defun zap-back-to-char (arg char)
+  (interactive "p\ncBack-zap to char: ")
+  (zap-to-char (- arg) char))
+
+(global-set-key (kbd "ESC M-z") 'zap-back-to-char)
+
+(defun go-to-char (arg char)
+  (interactive "p\ncGo to char: ")
+  (forward-char 1)
+  (if (if arg
+          (search-forward (char-to-string char) nil nil arg)
+        (search-forward (char-to-string char)))
+      (backward-char 1))
+  )
+
+(defun go-back-to-char (arg char)
+  (interactive "p\ncGo back to char: ")
+  (forward-char -1)
+  (if arg
+      (search-backward (char-to-string char) nil nil arg)
+    (search-backward (char-to-string char)))
+  )
+
+(global-set-key (kbd "C-M-z") 'go-back-to-char)
 
 
 ;;---
@@ -111,8 +137,11 @@
       (global-set-key (kbd "M-x") 'smex)
       (global-set-key (kbd "M-X") 'smex-major-mode-commands)
       ;; This is your old M-x.
-      (global-set-key (kbd "ESC M-x") 'execute-extended-command)))
-  (message "%s: failed to load `smex'." load-file-name))
+      (global-set-key (kbd "ESC M-x") 'execute-extended-command))
+  (progn
+    (message "%s: failed to load `smex'." load-file-name)
+    ;;fall back to Emacs' icomplete-mode
+    (icomplete-mode t)))
 
 
 ;;-- anything
@@ -197,19 +226,13 @@
 (eval-after-load 'python
   (add-hook 'python-mode-hook 'hideshowvis-enable))
 
-(eval-after-load 'hideshow
-  (define-key hs-minor-mode-map (kbd "C-+")  'hs-toggle-hiding))
+;(eval-after-load "hideshow"
+;  (define-key hs-minor-mode-map (kbd "C-+")  'hs-toggle-hiding))
 
 
 ;;(@* "some visual effect")
 (autoload 'highlight-symbol-at-point "highlight-symbol" "Toggle highlighting of the symbol at point." t)
 (global-set-key (kbd "<double-down-mouse-1>") 'highlight-symbol-at-point)
-
-(autoload 'highlight-indentation "highlight-indentation" "Toggle highlight indentation." t)
-
-(autoload 'idle-highlight "idle-highlight" nil t)
-
-(autoload 'rainbow-delimiters "rainbow-delimiters" nil t)
 
 
 ;;-- linkd: visualize section header & links (to file/man/info/url)

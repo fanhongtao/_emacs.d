@@ -78,14 +78,14 @@
 
 
 
-(global-set-key (kbd "C-m") 'newline-and-indent)
+(global-set-key (kbd "RET") 'indent-new-comment-line)
 (global-set-key (kbd "C-j") 'newline)
+
 (global-set-key (kbd "C-=") 'align-regexp)
 
 (global-set-key (kbd "M-/") 'hippie-expand)
 
 (global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
-(global-set-key (kbd "S-RET") 'insert-new-comment-line)
 
 (global-set-key (kbd "C-c C-w") 'toggle-truncate-lines)
 (global-set-key (kbd "C-c RET") 'cua-set-rectangle-mark)
