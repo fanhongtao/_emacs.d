@@ -1,11 +1,11 @@
 ;;; w32shell.el --- Helpers for inferior shells on w32
 
-;; Copyright (C) 2005, 2006 by Lennart Borgman
+;; Copyright (C) 2005, 2006, 2007 by Lennart Borgman
 ;;
 ;; Author: Lennart Borgman
 ;; Created: Tue Nov 22 01:07:13 2005
 ;; Version: 0.52
-;; Last-Updated: Thu Dec 28 15:34:00 2006 (3600 +0100)
+;; Last-Updated: Fri May 18 10:58:41 2007 (7200 +0200)
 ;; Keywords:
 ;; Compatibility: Emacs 22
 ;;
@@ -53,65 +53,69 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helpers
-(defun w32shell-in-exec-path(path)
-  (let ((dc-exec-path (mapcar (lambda(elt)
+(defun w32shell-in-exec-path (path)
+  (let ((dc-exec-path (mapcar (lambda (elt)
                                 (downcase elt))
                               exec-path)))
     (member (downcase path) dc-exec-path)))
 
-(defun w32shell-add-exec-path(path &optional append)
+(defun w32shell-add-exec-path (path &optional append)
   (unless (w32shell-in-exec-path path)
     (add-to-list 'exec-path path append)))
 
-(defun w32shell-remove-exec-path(path)
-  (let (inpath
-        (dcpath (downcase path)))
-    (mapc (lambda(elt)
-            (when (equal dcpath (downcase elt))
-              (setq inpath elt)))
-          exec-path)
-    (when inpath
-      (setq exec-path (delete inpath exec-path)))))
+(defun w32shell-remove-exec-path (path)
+  (unless (listp path) (setq path (list path)))
+  (let ((dcpath (mapcar (lambda (elt)
+                          (downcase elt))
+                        path)))
+    (dolist (dc dcpath)
+      (setq exec-path (mapcar (lambda (elt)
+                                (unless (equal dc (downcase elt))
+                                  elt))
+                              exec-path)))
+    (setq exec-path (delete nil exec-path))))
 
 
-(defun w32shell-in-envpath(path)
+(defun w32shell-in-envpath (path)
   (let ((envpath (replace-regexp-in-string "\\\\" "/" (getenv "PATH")))
         (norpath (replace-regexp-in-string "\\\\" "/" path))
         (case-fold-search t))
     (string-match (concat "\\(?:^\\|;\\)" (regexp-quote norpath) "\\($\\|;\\)") envpath)))
 
-(defun w32shell-add-envpath(path &optional append)
+(defun w32shell-add-envpath (path &optional append)
   (unless (w32shell-in-envpath path)
     (let ((bslash-path (replace-regexp-in-string "/" "\\\\" path)))
       (if append
           (setenv "PATH" (concat (getenv "PATH") ";" bslash-path))
         (setenv "PATH" (concat bslash-path ";" (getenv "PATH")))))))
 
-(defun w32shell-remove-envpath(path)
-  (let ((envpath (replace-regexp-in-string "\\\\" "/" (getenv "PATH")))
-        (pos (w32shell-in-envpath path))
-        )
-    (while pos
-      (let* (
-             (sub1 (if (= 0 pos) "" (substring envpath 0 pos)))
-             (sub2 (substring envpath (+ pos 1 (length path))))
-             (newenvpath (replace-regexp-in-string "/" "\\\\" (concat sub1 sub2))))
-        (setenv "PATH" newenvpath))
-      (setq envpath (replace-regexp-in-string "\\\\" "/" (getenv "PATH")))
-      (setq pos (w32shell-in-envpath path))
-      )))
+(defun w32shell-remove-envpath (path)
+  (let ((paths path))
+    (unless (listp paths) (setq paths (list paths)))
+    (dolist (path path)
+      (let ((envpath (replace-regexp-in-string "\\\\" "/" (getenv "PATH")))
+            (pos (w32shell-in-envpath path)))
+        (while pos
+          (let* (
+                 (sub1 (if (= 0 pos) "" (substring envpath 0 pos)))
+                 (sub2 (substring envpath (+ pos 1 (length path))))
+                 (newenvpath (replace-regexp-in-string "/" "\\\\" (concat sub1 sub2))))
+            (setenv "PATH" newenvpath))
+          (setq envpath (replace-regexp-in-string "\\\\" "/" (getenv "PATH")))
+          (setq pos (w32shell-in-envpath path))
+          )))))
 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Emacs itself in path
 ;; FIx-me: is this needed?
-;; (defun w32shell-emacs-path()
+;; (defun w32shell-emacs-path ()
 ;;   (file-name-as-directory exec-directory))
 ;;   (if (string= "/" (substring exec-directory -1))
 ;;                         (setq emacs-path (substring exec-directory 0 -1))
 ;;                       exec-directory))
-(defun w32shell-emacsw32-gnuwin32-bindir()
+(defun w32shell-emacsw32-gnuwin32-bindir ()
   ;;(lwarn '(w32shell-emacsw32-gnuwin32-bindir) :warning "exec-directory=%s" exec-directory)
   (let* ((top (directory-file-name
                (file-name-directory
@@ -130,12 +134,12 @@
     (when (file-directory-p bin)
       (file-name-as-directory bin))))
 
-(defun w32shell-add-emacs(&optional append)
+(defun w32shell-add-emacs (&optional append)
   "Add Emacs itself to the path of inferior shells."
   (interactive)
   (w32shell-add-envpath exec-directory)
   (w32shell-add-exec-path exec-directory))
-(defun w32shell-remove-emacs()
+(defun w32shell-remove-emacs ()
   "Remove Emacs itself from the path of inferior shells."
   (interactive)
   (w32shell-remove-envpath exec-directory)
@@ -145,7 +149,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Choosing a w32 shell for Emacs
 
-(defun w32shell-delayed-customize(msg symbol)
+(defun w32shell-delayed-customize (msg symbol)
   (let ((use-dialog-box nil)
         (is-group (get symbol 'custom-group)))
     (when (y-or-n-p (format "%s. Do you want to customize %s now? " msg symbol))
@@ -153,7 +157,7 @@
           (customize-group symbol)
         (customize-option symbol)))))
 
-(defun w32shell-verify-bindir(bin-sym shexe)
+(defun w32shell-verify-bindir (bin-sym shexe)
   "If BIN-SYM value is a sh bin directory name return it.
 Otherwise offer the user at idle time to customize it.
 
@@ -193,9 +197,10 @@ them is not found a warning is given."
   :group 'w32shell)
 
 ;; Fix-me: write a function that checks consistency against this!
-(defun w32shell-set-shell(shellname)
+(defun w32shell-set-shell (shellname)
   "Set shell to use for inferior shells.
 This sets `shell-file-name' and the environment variable SHELL.
+It also changes the environment variable PATH and `exec-path'.
 
 Accepted values for SHELLNAME are \"cmd\", \"cygwin\" and
 \"msys\".
@@ -221,6 +226,17 @@ Returns non-nil if success."
     (cond (  (equal shellname "cygwin")
              (setq bin (w32shell-verify-bindir 'w32shell-cygwin-bin "bash.exe"))
              (when bin
+               (unless (file-directory-p bin) (error "Can't find directory %s" bin))
+               (let ((usr-bin (expand-file-name "../usr/bin" bin))
+                     (usr-local-bin (expand-file-name "../usr/local/bin" bin)))
+                 (setq bin (expand-file-name "../bin" bin))
+                 (setq bin (list bin usr-bin usr-local-bin)))
+               ;; in cygwin use "cygpath -a -w /bin" and "echo $PATH" to check.
+               ;;
+               ;; c:/cygwin/bin shows up in cygwin as /usr/bin,looks
+               ;; like a cygwin bug.  I have reported it, but cygwin
+               ;; maintainers does not seem to think it is important
+               ;; (and I can agree).
                (setq shell "bash")
                (setenv "PS1" "Cygwin \\w > "))
              )
@@ -238,9 +254,11 @@ Returns non-nil if success."
           (  t
              (error "Unrecognized shell name: %s" shellname)))
     (when (or bin shell)
-      (when bin
-        (unless (file-directory-p bin)
-          (error "Can't find directory %s" bin)))
+      ;; (when bin
+      ;;   (unless (listp bin) (setq bin (cons bin nil)))
+      ;;   (dolist (b bin)
+      ;;     (unless (file-directory-p b)
+      ;;       (error "Can't find directory %s" b))))
       (when w32shell-current-shell-path
         (w32shell-remove-exec-path w32shell-current-shell-path)
         (w32shell-remove-envpath   w32shell-current-shell-path)
@@ -262,8 +280,13 @@ Returns non-nil if success."
       (when shell
         ;;(lwarn '(w32shell) :warning "bin=%s, shell-name=%s" bin shellname)
         (when bin
-          (w32shell-add-exec-path bin)
-          (w32shell-add-envpath bin))
+          (unless (listp bin) (setq bin (list bin)))
+          (dolist (b bin)
+            (w32shell-add-exec-path b)
+            (w32shell-add-envpath b))
+          ;;(message "exec-path=%s" exec-path)
+          ;;(message "evn PATH=%s" (getenv "PATH"))
+          )
         (setq w32shell-current-shell-path bin)
         ;; Call cygwin-mount. After an idea by Ismael Valladolid Torres:
         (when (equal shellname "cygwin")
@@ -277,20 +300,20 @@ Returns non-nil if success."
         ))
     bin))
 
-(defun w32shell-get-missing-progs()
+(defun w32shell-get-missing-progs ()
   (let ((missing))
     (dolist (prog w32shell-wanted-progs)
       (unless (executable-find prog)
         (add-to-list 'missing prog)))
     missing))
 
-(defun w32shell-find-is-unix-find()
+(defun w32shell-find-is-unix-find ()
   (let ((find-prog (executable-find "find"))
         (findstr-prog (executable-find "findstr")))
     (not (string= (file-name-directory find-prog)
                   (file-name-directory findstr-prog)))))
 
-(defun w32shell-check-wanted-progs()
+(defun w32shell-check-wanted-progs ()
   "Checks if `w32shell-wanted-progs' are available.
 This depends on `w32shell'."
   (interactive)
@@ -383,7 +406,7 @@ Setting is done with `w32shell-set-shell'."
      (setenv "PATH" envpath)))
 
 
-(defun cygwin-shell()
+(defun cygwin-shell ()
   "Run `shell' with Cygwin as the shell.
 Does not affect the setting of `w32shell-shell' but otherwise
 works as if you had set this to 'cygwin.
@@ -394,13 +417,13 @@ Is otherwise similar to `cygwin-shell'."
   (interactive)
   (w32shell-with-shell "cygwin" (shell "*cygwin shell*")))
 
-(defun msys-shell()
+(defun msys-shell ()
   "Run `shell' with MSYS as the shell.
 Is otherwise similar to `cygwin-shell'."
   (interactive)
   (w32shell-with-shell "msys" (shell "*msys shell*")))
 
-(defun cmd-shell()
+(defun cmd-shell ()
   "Run `shell' with Windows Command Prompt as the shell.
 File name completion with Tab/Shift-Tab is done in the style that
 Windows Command Prompt does it.
@@ -412,10 +435,10 @@ Is otherwise similar to `cygwin-shell'."
     (progn
       (shell "*cmd shell*")
       ;; fix-me: Temporary, until removed from viper
-      (when (and (boundp 'viper-insert-basic-map)
-                 (keymapp viper-insert-basic-map))
-        (define-key viper-insert-basic-map
-          (if viper-xemacs-p [(shift tab)] [S-tab]) nil))
+      ;; (when (and (boundp 'viper-insert-basic-map)
+      ;;            (keymapp viper-insert-basic-map))
+      ;;   (define-key viper-insert-basic-map
+      ;;     (if viper-xemacs-p [(shift tab)] [S-tab]) nil))
       (local-set-key [tab] 'w32shell-dynamic-complete-filename-like-cmd-fw)
       (local-set-key [(shift tab)]
                      'w32shell-dynamic-complete-filename-like-cmd-bw))))
@@ -506,7 +529,7 @@ dito -bw)."
               (progn
                 (set-process-filter
                  proc
-                 (lambda(proc str)
+                 (lambda (proc str)
                    (let ((lstr (split-string str "[\r\n]+")))
                      (setq default-directory
                            (file-name-as-directory (nth 1 lstr))))))
@@ -556,7 +579,7 @@ dito -bw)."
            new-completion
            begin-filename))))
 
-(defun w32shell-get-argv(cmdline)
+(defun w32shell-get-argv (cmdline)
   "Split CMDLINE into args.
 The splitting is done using the syntax used on MS Windows.
 
@@ -669,35 +692,73 @@ If CMDLINE ends with a space or is \"\" a list consisting of
                (substring cmd (nth 1 a) (nth 2 a)))))
   )
 
-(defun w32shell-explorer(dir)
+;;(w32-shell-execute nil (concat (getenv "SystemRoot") "\\explorer.exe") "/n,/select,c:\\test\\temp.htm")
+(defun w32shell-explorer-file (file)
+  "Open Windows Explorer with file FILE selected."
+  (interactive "fFile to focus in Explorer: ")
+  (let ((full-file (expand-file-name file)))
+    (setq full-file (replace-regexp-in-string "/" "\\" full-file t t))
+    (w32-shell-execute nil (concat (getenv "SystemRoot") "\\explorer.exe")
+                       (concat "/n,/select," full-file))))
+
+(defun w32shell-explorer-current-file ()
+  "Open Windows Explorer with current file selected."
+  (interactive)
+  (if buffer-file-name
+      (w32shell-explorer-file buffer-file-name)
+    (message "Buffer has no file name")))
+
+(defun w32shell-explorer-old (dir)
+  "Open Windows Explorer in directory DIR.
+For some reason with this function Explorer does not get
+focus. Use the new version instead."
+  (interactive "DStart in directory: ")
+  (setq dir (expand-file-name dir))
+  (w32-shell-execute nil dir))
+
+(defun w32shell-explorer (dir)
   "Open Windows Explorer in directory DIR."
   (interactive "DStart in directory: ")
   (setq dir (expand-file-name dir))
-  (w32shell-shell-execute nil dir))
+  ;;(setq dir (directory-file-name dir))
+  (message "dir=%s" dir) (sit-for 2)
+  (w32-shell-execute
+   "explore" ;;nil
+   "" ;(concat (getenv "SystemRoot") "\\explorer.exe")
+   (concat "/n," dir)
+   ))
 
-(defun w32shell-explorer-here()
+(defun w32shell-explorer-here ()
   "Open Windows Explorer in current directory."
   (interactive)
   (w32shell-explorer default-directory))
 
-(defun w32shell-cmd(dir)
+(defun w32shell-cmd (dir)
   "Open a Windows command prompt in directory DIR.
 Emacs bin dir is added to path in the started command window."
   (interactive "DStart in directory: ")
   (let ((default-directory (expand-file-name dir))
+        (old-emacs-dir (getenv "emacs_dir"))
         (old-path (getenv "PATH")))
+    (setenv "emacs_dir"
+            (save-match-data
+              (replace-regexp-in-string "/" "\\" old-emacs-dir t t)))
     (w32shell-add-envpath exec-directory)
-    ;;(w32shell-remove-envpath exec-directory)
-    (condition-case err
-        (progn
-          ;;(call-process "cmd.exe" nil 0 nil "/c" "start" (concat '(?\") "hej4" '(?\")) "cmd.exe")
-          ;; Bug in call-process quoting, use this instead
-          (w32-shell-execute nil "cmd.exe" "/c start \"Command Prompt with Emacs in PATH\"")
-          )
-      (error (message "%s" (error-message-string err))))
-    (setenv "PATH" old-path)))
+    (unwind-protect
+        (condition-case err
+            (progn
+              ;;(call-process "cmd.exe" nil 0 nil "/c" "start" (concat '(?\") "hej4" '(?\")) "cmd.exe")
+              ;; Bug in call-process quoting, use this instead this:
+              ;;(w32-shell-execute nil "cmd.exe" "/c start \"Command Prompt with Emacs in PATH\"")
+              ;; Nope, that will not give the correct path ... - turn off quoting is spawnve instead:
+              (let ((w32-quote-process-args nil))
+                (call-process "cmd.exe" nil 0 nil "/c" "start"
+                              (concat '(?\") "Command Prompt with Emacs in PATH" '(?\")) "cmd.exe")))
+          (error (message "%s" (error-message-string err))))
+      (setenv "emacs_dir" old-emacs-dir)
+      (setenv "PATH" old-path))))
 
-(defun w32shell-cmd-here()
+(defun w32shell-cmd-here ()
   "Open a Windows command prompt in current directory.
 Emacs bin dir is added to path in the started command window."
   (interactive)
