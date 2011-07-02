@@ -10,29 +10,40 @@
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
-;;--- minor mode
+;;--- minor modes
 (global-unset-key (kbd "<f10>"))
 (global-set-key (kbd "<f10> <f10>") 'menu-bar-open)
 
+(global-set-key (kbd "<f10> f") 'auto-fill-mode)
 (global-set-key (kbd "<f10> p") 'show-paren-mode)
 (global-set-key (kbd "<f10> w") 'whitespace-mode)
 (global-set-key (kbd "<f10> h") 'hs-minor-mode)
 (global-set-key (kbd "<f10> o") 'outline-minor-mode)
+(global-set-key (kbd "<f10> v") 'toggle-viper-mode)
+(global-set-key (kbd "<f10> C-w") 'visual-line-mode)
+(global-set-key (kbd "<f10> t") 'toggle-truncate-lines)
+(global-set-key (kbd "<f10> l") 'linum-mode)
+
 
 
 ;; 3rd-party modules
 (global-set-key (kbd "<f10> c") 'auto-complete-mode)
 
 (autoload 'highlight-indentation "highlight-indentation" "Toggle highlight indentation." t)
+(autoload 'highlight-parentheses-mode "highlight-parentheses" nil t)
 (autoload 'idle-highlight "idle-highlight" nil t)
 (autoload 'rainbow-delimiters "rainbow-delimiters" nil t)
 (autoload 'visible-mark-mode "visible-mark" nil t)
+(autoload 'drag-stuff-mode "drag-stuff" nil t)
+(autoload 'setnu-mode "setnu" "vi-style line numbers" t)
 
 (global-set-key (kbd "<f10> i") 'highlight-indentation)
+(global-set-key (kbd "<f10> P") 'highlight-parentheses-mode)
 (global-set-key (kbd "<f10> h") 'idle-highlight)
 (global-set-key (kbd "<f10> r") 'rainbow-delimiters)
 (global-set-key (kbd "<f10> m") 'visibile-mark-mode)
-
+(global-set-key (kbd "<f10> d") 'drag-stuff-mode)
+(global-set-key (kbd "<f10> n") 'setnu-mode)
 
 ;;--- some elisp commands
 (global-set-key (kbd "<f3> f") 'find-function-at-point)
@@ -81,6 +92,8 @@
       (global-set-key (kbd "<f2> p") 'bm-previous)
       (global-set-key (kbd "<f2> l") 'bm-show)
 
+      (global-set-key (kbd "<f2> <f2>") 'bm-next)
+
       (if (fboundp 'anything-bm-list)
           (global-set-key (kbd "<f2> l") 'anything-bm-list))
       )
@@ -93,8 +106,11 @@
         (define-key global-map (kbd "<f2> t") 'viss-bookmark-toggle)
         (define-key global-map (kbd "<f2> n") 'viss-bookmark-prev-buffer)
         (define-key global-map (kbd "<f2> p") 'viss-bookmark-next-buffer)
-        (define-key global-map (kbd "<f2> c") 'viss-bookmark-clear-all-buffer))
-      ))
+        (define-key global-map (kbd "<f2> c") 'viss-bookmark-clear-all-buffer)
+
+        (define-key global-map (kbd "<f2> <f2>") 'viss-bookmark-next-buffer)
+        ))
+      )
 
 ;;---
 ;;TODO: folding

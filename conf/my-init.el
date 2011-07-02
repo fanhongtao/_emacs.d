@@ -99,7 +99,7 @@
   (progn
       (global-set-key (kbd "<M-up>") 'swap-line-up)
       (global-set-key (kbd "<M-down>") 'swap-line-down)
-      )
+      ))
 
 
 ;; vi-style join-line

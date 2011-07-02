@@ -8,23 +8,28 @@
 (defun one-key-bind-keymap (key keymap-prefix)
   "Generate an one-key menu for keys starting with `keymap-prefix', and bind it to `key'.
 
-It also bind `keymap-prefix'-? to the same one-key menu, if not in use.
+    It also bind `keymap-prefix'-? to the same one-key menu, if not in use.
 
-For example, when called with ('ESC <f1>', '<f1>'), it would
-generate one-key menu 'one-key-menu-<f1>', and bind 'ESC <f1>'
-and '<f1> ?' to one-key-menu-<f1>.
-"
+    For example, when called with ('ESC <f1>', '<f1>'), it would
+    generate one-key menu 'one-key-menu-<f1>', and bind 'ESC <f1>'
+    and '<f1> ?' to one-key-menu-<f1>.
+    "
   (if (keymapp (key-binding (read-kbd-macro keymap-prefix)))
       (let ( (one-key-menu-sym (intern (format "one-key-menu-%s"
-					       (replace-regexp-in-string " " "-" keymap-prefix)))) )
-	(let ( (prefixed-?-key (read-kbd-macro (concat keymap-prefix " ?"))) )
-	  (unless (key-binding prefixed-?-key)
-	    (global-set-key prefixed-?-key one-key-menu-sym)))
-	(with-temp-buffer
-	  (one-key-insert-template keymap-prefix keymap-prefix)
-	  (eval-buffer))
-	(global-set-key (read-kbd-macro key) one-key-menu-sym))
+                                               (replace-regexp-in-string " " "-" keymap-prefix)))) )
+        (let ( (prefixed-?-key (read-kbd-macro (concat keymap-prefix " ?"))) )
+          (unless (key-binding prefixed-?-key)
+            (global-set-key prefixed-?-key one-key-menu-sym)))
+        (with-temp-buffer
+          (one-key-insert-template keymap-prefix keymap-prefix)
+          (eval-buffer))
+        (global-set-key (read-kbd-macro key) one-key-menu-sym))
     (message "'%s' is not a keymap-prefix" keymap-prefix)))
+
+(defun one-key-refresh-fkey (fkey)
+  (interactive "sfkey: ")
+  (one-key-bind-keymap (concat "ESC " fkey) fkey))
+
 
 ;; 与one-key-default的不同在于，这种配置方式下，"ESC <f5>"和"<f5> ?"被
 ;; 绑定到one-key-menu-<f5>，而原有<f5>功能不会被取代，这样你可以添加新
