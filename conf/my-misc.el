@@ -64,8 +64,8 @@
 
 (defun check-parens+ ()
   (interactive)
-  (if (check-parens)
-      (message "%s: OK" (buffer-file-name))))
+  (check-parens)
+  (message "%s: OK" (buffer-file-name)))
 
 (define-key emacs-lisp-mode-map (kbd "<M-f9>") 'check-parens+)
 
@@ -83,10 +83,6 @@
   )
 (if (featurep 'bm)
     (progn
-      (global-set-key (kbd "<left-fringe> <C-mouse-1>") 'bm-toggle-mouse)
-      (global-set-key (kbd "<left-fringe> <C-mouse-5>") 'bm-next-mouse)
-      (global-set-key (kbd "<left-fringe> <C-mouse-4>") 'bm-previous-mouse)
-
       (global-set-key (kbd "<f2> t") 'bm-toggle)
       (global-set-key (kbd "<f2> n") 'bm-next)
       (global-set-key (kbd "<f2> p") 'bm-previous)
@@ -98,11 +94,7 @@
           (global-set-key (kbd "<f2> l") 'anything-bm-list))
       )
   (if (featurep 'linemark)              ;; linemark.el from CEDET
-      (progn
-        (global-set-key (kbd "<left-fringe> <C-mouse-1>") 'viss-bookmark-toggle)
-        (global-set-key (kbd "<left-fringe> <C-mouse-5>") 'viss-bookmark-next-buffer)
-        (global-set-key (kbd "<left-fringe> <C-mouse-4>") 'viss-bookmark-prev-buffer)
-        
+      (progn       
         (define-key global-map (kbd "<f2> t") 'viss-bookmark-toggle)
         (define-key global-map (kbd "<f2> n") 'viss-bookmark-prev-buffer)
         (define-key global-map (kbd "<f2> p") 'viss-bookmark-next-buffer)
@@ -123,10 +115,10 @@
 (global-set-key (kbd "C-c C-+") 'fold-dwim-show-all)
 (global-set-key (kbd "C-c C--") 'fold-dwim-hide-all)
 
-(when (locate-library "fold-dwim")
-      ;; FIXME: fold-dwim-toggle would fold/unfold on cursor, not the mouse point
-      (global-set-key (kbd "<left-fringe><mouse-1>") 'fold-dwim-toggle)
-      )
+;;(when (locate-library "fold-dwim")
+;;      ;; FIXME: fold-dwim-toggle would fold/unfold on cursor, not the mouse point
+;;      (global-set-key (kbd "<left-fringe><mouse-1>") 'fold-dwim-toggle)
+;;      )
 
 ;;--- selective display (quick & dirty code folding)
 ;; http://www.emacswiki.org/emacs/HideShow#toc5
@@ -279,18 +271,6 @@ See: `forward-block'"
 
       (message "Words: %d. Chars: %d." wCnt charCnt)
       )))
-
-;;---
-;;; select rectangle using H-mouse-1 (could it work?)
-(require 'cua-rect)	
-(defun hkb-mouse-mark-cua-rectangle (event)
-  (interactive "e")
-  (if (not cua--rectangle)	  
-      (cua-mouse-set-rectangle-mark event)
-    (cua-mouse-resize-rectangle event)))
-(global-set-key (kbd "<A-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
-(define-key cua--rectangle-keymap (kbd "<A-mouse-1>") 'hkb-mouse-mark-cua-rectangle)
-
 
 ;;(@* "tempbuf" *)
 ;;(autoload 'turn-on-tempbuf-mode "tempbuf")

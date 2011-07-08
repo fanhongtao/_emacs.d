@@ -1,3 +1,21 @@
+;;;-- on Linux, wheel-up/-down is called mouse-4/-5
+(define-key key-translation-map (kbd "<C-mouse-4>") (kbd "<C-wheel-up>"))
+(define-key key-translation-map (kbd "<C-mouse-5>") (kbd "<C-wheel-down>"))
+(define-key key-translation-map (kbd "<M-mouse-4>") (kbd "<M-wheel-up>"))
+(define-key key-translation-map (kbd "<M-mouse-5>") (kbd "<M-wheel-down>"))
+(define-key key-translation-map (kbd "<S-mouse-4>") (kbd "<S-wheel-up>"))
+(define-key key-translation-map (kbd "<S-mouse-5>") (kbd "<S-wheel-down>"))
+(define-key key-translation-map (kbd "<A-mouse-4>") (kbd "<A-wheel-up>"))
+(define-key key-translation-map (kbd "<A-mouse-5>") (kbd "<A-wheel-down>"))
+
+
+(defmacro defun-mouse (function newfunc)
+  '(defun ,newfunc (event)
+     (interactive "e")
+     (mouse-set-point event)
+     (call-interactively ',function)))
+
+
 ;;;-- without any modifier
 (autoload 'highlight-symbol-at-point "highlight-symbol" "Toggle highlighting of the symbol at point." t)
 (global-set-key (kbd "<double-down-mouse-1>") 'highlight-symbol-at-point)
@@ -11,19 +29,22 @@
 (global-unset-key (kbd "<C-down-mouse-1>")) ;;moved to <mode-line>
 (global-unset-key (kbd "<C-down-mouse-2>"))
 
-(defun outline-toggle-children-by-mouse (event)
-  (interactive "e")
-  (mouse-set-point event)
-  (call-interactively 'outline-toggle-children))
+(require 'outline)
 
-(global-set-key (kbd "<C-mouse-1>")    'outline-toggle-children-by-mouse)
+;; (defun outline-toggle-children-by-mouse (event)
+;;   (interactive "e")
+;;   (mouse-set-point event)
+;;   (call-interactively 'outline-toggle-children))
+(defun-mouse outline-toggle-children outline-toggle-children-by-mouse)
 (global-set-key (kbd "<C-wheel-up>")   'outline-previous-visible-heading)
 (global-set-key (kbd "<C-wheel-down>") 'outline-next-visible-heading)
 (global-set-key (kbd "<C-mouse-2>")    'hide-sublevels)
 
 
-;;-- Ctrl on <left-fringe> :  buffer-local bookmarks
+;;-- Ctrl on <left-fringe> 
 
+(global-set-key (kbd "<left-fringe> <C-mouse-1>")    'outline-toggle-children-by-mouse)
+(global-set-key (kbd "<left-fringe> <C-mouse-2>") 'show-all)
 
 ;;-- Ctrl on <mode-line>
 (global-set-key (kbd "<mode-line> <C-down-mouse-1>")    'mouse-buffer-menu)

@@ -275,6 +275,8 @@
 ;;(load "my-options-cmds" t) ;;TODO
 (load "~/.emacs.d/conf/my-misc" t)
 (load "~/.emacs.d/conf/my-one-key" t)
+(load "~/.emacs.d/conf/my-mouse" t)
+
 ;;(load "hyper-key-bindings" t)
 
 
