@@ -58,13 +58,13 @@
 ;;(global-set-key (kbd "<f11> +") 'enlarge-window-2d)
 ;;(global-set-key (kbd "<f11> -") 'shrink-window-2d)
 
-(defun enlarge-window-vertically-more ()
-  (interactive)
-  (enlarge-window win-resize-big-steps-vertical))
+(defun enlarge-window-vertically-more (arg)
+  (interactive "p")
+  (enlarge-window (* arg win-resize-big-steps-vertical)))
 
-(defun shrink-window-vertically-more ()
-  (interactive)
-  (shrink-window win-resize-big-steps-vertical))
+(defun shrink-window-vertically-more (arg)
+  (interactive "p")
+  (shrink-window (* arg win-resize-big-steps-vertical)))
 
 (defun enlarge-window-horizontally-more ()
   (interactive)
@@ -212,7 +212,7 @@ an error is signaled."
         (error "'%s' does not have a visible window" buffer-name)
       (switch-to-buffer buffer-name))))
 
-(defun imenu-tree+ (arg)
+(defun bmz/imenu-tree (arg)
   (interactive "P")
   (imenu-tree arg)
   (if (featurep 'ide-skel)
@@ -227,16 +227,18 @@ an error is signaled."
         (set-window-dedicated-p window t))))
     
 
+(defun split-root-window-vertially ()
+  (interactive)
+  (split-root-window nil nil))k
+
+(defun split-root-window-horizontally ()
+  (interactive)
+  (split-root-window nil 'horizontally))
+
 ;; keys
 
-(defvar my-win-fns-keymap (make-sparse-keymap "Window operations"))
-(define-prefix-command 'my-win-fns-keymap)
 
-(defun init-win-fns-keys (prefix-key)
-  (global-set-key (read-kbd-macro prefix-key) 'my-win-fns-keymap)
-
-  ;; translate <lwindow> to <f11>
-  (define-key key-translation-map (kbd "<lwindow>") (kbd "<f11>"))
+(defun init-win-fns-keys (map)
 
   (let ( (map my-win-fns-keymap) )
     ;; resizing
@@ -275,14 +277,22 @@ an error is signaled."
     (define-key map (kbd "<tab>") 'other-window)
     (define-key map (kbd "<S-tab>") 'other-window-backward)
 
-    (define-key map (kbd "j") 'ido-jump-to-window)
-    (define-key map (kbd "<C-tab>") 'ido-jump-to-tab)
+    (define-key map (kbd "D")   'dired-jump-other-window)
+    
+    (define-key map (kbd "g w") 'ido-jump-to-window)
+    (define-key map (kbd "g t") 'ido-jump-to-tab)
 
     ;; (if (featurep 'window-numbering)
     ;;     ;;FIXME: customize the keymap
     ;;     (window-numbering-mode t))
 
+    (define-key map (kbd "C-z") 'winner-undo)
+    (define-key map (kbd "C-y") 'winner-redo)
+
     (define-key map (kbd "<s-backspace>") 'rotate-windows)
+    
+    ;; the following need some 3rd-party library
+    
     ;;TODO:
     ;; transpose-frame
     ;; flip-frame
@@ -291,20 +301,21 @@ an error is signaled."
     ;; rotate-frame-clockwise
     ;; rotate-frame-anti-clockwise
 
-    ;; the following need some 3rd-party library
 
-    ;;(when (or (featurep 'window-extensions)
-    ;;          (featurep 'sticky-windows)))
-    (define-key map (kbd "*") 'sticky-window-keep-window-visible)
     (define-key map (kbd "C-m") 'toggle-one-window)
     (define-key map (kbd "<f11>") 'toggle-one-window)
     
     ;; override C-x 0 and C-x 1, to regard window-dedicated-p
+    ;;(when (or (featurep 'window-extensions)
+    ;;          (featurep 'sticky-windows)))
+    (define-key map (kbd "*") 'sticky-window-keep-window-visible)    
     (when (fboundp 'sticky-window-delete-window)
         (global-set-key (kbd "C-x 0") 'sticky-window-delete-window)
         (global-set-key (kbd "C-x 1") 'sticky-window-delete-other-windows))
 
-    ;;TODO: split-root?
+    ;; split-root.el
+    (define-key map (kbd "2") 'split-root-window-vertially)
+    (define-key map (kbd "3") 'split-root-window-horizontally)
     
     ;;(when (featurep 'tabbar)            
     (define-key map (kbd "C-n") 'tabbar-forward-tab)
@@ -313,7 +324,7 @@ an error is signaled."
     ;;
     ;; some special windows
     ;;(when (featurep 'imenu-tree)
-    (define-key map (kbd "I") 'imenu-tree+)
+    (define-key map (kbd "I") 'bmz/imenu-tree)
     (define-key map (kbd "T") 'tags-tree)
     (define-key map (kbd "N") 'nav)
 
@@ -325,6 +336,12 @@ an error is signaled."
     (define-key map (kbd "s") 'speedbar)
     ;;(if (featurep 'sr-speedbar)
     (define-key map (kbd "S") 'sr-speedbar-toggle)
-    ))
 
-(init-win-fns-keys "<f11>")
+    map
+    )
+
+(defvar my-win-fns-keymap (make-sparse-keymap "Window operations"))
+(init-win-fns-keys my-win-fns-keymap)
+
+(define-key global-map (kbd "<f11>") 'my-win-fns-keymap)
+(define-key global-map (kbd "<lwindow>") 'my-win-fns-keymap)

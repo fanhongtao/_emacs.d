@@ -1,10 +1,67 @@
-;;(@* "key bindings")
+(fset 'yes-or-no-p 'y-or-n-p)
+
+;;;_ gui options
+
+(if (fboundp 'tool-bar-mode)
+    (tool-bar-mode -1))
+
+(setq frame-title-format '("%b (%m) - Emacs "
+			   (:eval emacs-version)))
+
+(when (eq window-system 'x)
+    (setq x-select-enable-clipboard t)
+;;  (setq x-select-enable-primary t)
+    (set-scroll-bar-mode 'right))
+
+
+(setq winner-dont-bind-my-keys t)
+(winner-mode t)
+;;(global-set-key (kbd "<f11> C-z") 'winner-undo)
+;;(global-set-key (kbd "<f11> C-y") 'winner-redo)
+
+;;;_ tabbar
+;; ide-skel would group buffers into two: editing buffer, emacs buffer
+(require 'ide-skel nil t)
+
+;; if you use `ide-ske', don't directly load `tabbar' after `ide-ske'
+;; as this would mess up the tab group definition of `ide-skel'
+(when (or (featurep 'tabbar)
+          (load "tabbar" t))
+  (tabbar-mode t)
+  (global-set-key (kbd "<C-tab>") 'tabbar-forward)
+  (global-set-key (kbd "<C-S-tab>") 'tabbar-backward))
+
+;;;_ files & buffers
+
+;;;_. recentf
+(require 'recentf)
+(setq recentf-max-saved-items 100)
+(setq recentf-menu-path '("File"))
+(recentf-mode t)
+
+;;;_. tempbuf
+;;(autoload 'turn-on-tempbuf-mode "tempbuf")
+(when (load "tempbuf" t)
+  (add-hook 'dired-mode-hook 'turn-on-tempbuf-mode)
+  (add-hook 'custom-mode-hook 'turn-on-tempbuf-mode)
+  (add-hook 'w3-mode-hook 'turn-on-tempbuf-mode)
+  (add-hook 'Man-mode-hook 'turn-on-tempbuf-mode)
+  (add-hook 'view-mode-hook 'turn-on-tempbuf-mode))
+
+;;;_ key bindings
+
+;;;_. key modifiers and prefix keys
+
 ;; <f2>: 2-columns, diff, bookmarks
 ;; <f3>: operations on current symbol
 ;; <f4>: cua-like
 ;; <f5>: selection and perform
 ;; <f5> a: anything
 ;; <f6>: vi style commands
+;; <f7>:
+;; <f8>:
+;; <f9>: M-f9: syntax check, C-f9: compile, f9: run
+;; <f10>: toggle minor modes
 ;; <C-f10>:  some settings
 ;; <f11>: window-related commands (`super' modifier)
 ;; <f12>: misc stuff
@@ -12,71 +69,112 @@
 (when (eq window-system 'w32)
   ;;(setq w32-lwindow-modifier 'super)
   
-  (setq w32-lwindow-modifier 'nil)
+  (setq w32-lwindow-modifier 'nil)  ;;<lwindow> used as a prefix key
   (setq w32-pass-lwindow-to-system t) ;;if set to nil, a single press <lwindow> would prevent Start Menu
   (define-key key-translation-map (kbd "<lwindow>") (kbd "<f11>"))
 
   ;; (setq w32-rwindow-modifier 'alt)      
-  (setq w32-rwindow-modifier 'nil)
+  (setq w32-rwindow-modifier 'hyper)
   (setq w32-pass-rwindow-to-system nil)
-  (define-key key-translation-map (kbd "<rwindow>") (kbd "C-c"))
+  ;;(define-key key-translation-map (kbd "<rwindow>") (kbd "C-c"))
   
-  (setq w32-apps-modifier 'alt)
+  (setq w32-apps-modifier 'hyper)
+  
+  (setq w32-scroll-lock-modifier nil)
+
+  (defun toggle-w32-alt-is-meta ()
+    (interactive)
+    (setq w32-alt-is-meta (not w32-alt-is-meta))
+    (setq w32-lwindow-modifier (if w32-lwindow-modifier
+                                   nil
+                                 'hyper))
+    (message "Now ALT key %s META. LWin is %s."
+             (if w32-alt-is-meta "is" "is not")
+             w32-lwindow-modifier)
+    )
+
+  (global-set-key (kbd "<scroll>") 'toggle-w32-alt-is-meta)
   )
   
-
 ;;FIXME: not work
 (when (eq window-system 'x)
   (define-key key-translation-map (kbd "<super>") (kbd "<f11>"))
   )
+
 
 (global-unset-key (kbd "<f2>"))
 (global-unset-key (kbd "<f3>"))
 (global-unset-key (kbd "<f4>"))
 (global-unset-key (kbd "<f10>"))
 
+(global-set-key (kbd "<f10> <f10>") 'menu-bar-open)
+
+;; toggle minor modes
+(global-set-key (kbd "<f10> c") 'highlight-changes-visible-mode)
+(global-set-key (kbd "<f10> f") 'auto-fill-mode)
+(global-set-key (kbd "<f10> p") 'show-paren-mode)
+(global-set-key (kbd "<f10> w") 'whitespace-mode)
+(global-set-key (kbd "<f10> h") 'hs-minor-mode)
+(global-set-key (kbd "<f10> o") 'outline-minor-mode)
+(global-set-key (kbd "<f10> v") 'toggle-viper-mode)
+(global-set-key (kbd "<f10> C-w") 'visual-line-mode)
+(global-set-key (kbd "<f10> t") 'toggle-truncate-lines)
+(global-set-key (kbd "<f10> l") 'linum-mode)
+
+;;;_. common keys
+(setq shift-select-mode t)
+(delete-selection-mode t)
+
+(setq cua-enable-cua-keys nil)
+;;(setq cua-rectangle-modifier-key 'hyper)  ;;leave C-RET
+(cua-mode)
+
+
+;;;_. misc keys
+
+(global-set-key (kbd "RET") 'newline-and-indent)
+(global-set-key (kbd "C-j") 'newline)
+
+(global-set-key (kbd "C-=") 'align-regexp)
 
 
 
-;;(@* "editing")
-;; make M-z behave more as zap-up-to-char
-(defun zap-up-to-char (arg char)
-    "Kill up to the ARG'th occurence of CHAR, and leave CHAR.
-  The CHAR is replaced and the point is put before CHAR."
-    (interactive "p\ncZap to char: ")
-    (zap-to-char arg char)
-    (insert char)
-    (forward-char -1))
+(global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
 
-(global-set-key (kbd "M-z") 'zap-up-to-char)
+(global-set-key (kbd "C-c C-w") 'toggle-truncate-lines)
+(global-set-key (kbd "C-c RET") 'cua-set-rectangle-mark)
 
-(defun zap-back-to-char (arg char)
-  (interactive "p\ncBack-zap to char: ")
-  (zap-to-char (- arg) char))
-
-(global-set-key (kbd "ESC M-z") 'zap-back-to-char)
-
-(defun go-to-char (arg char)
-  (interactive "p\ncGo to char: ")
-  (forward-char 1)
-  (if (if arg
-          (search-forward (char-to-string char) nil nil arg)
-        (search-forward (char-to-string char)))
-      (backward-char 1))
-  )
-
-(defun go-back-to-char (arg char)
-  (interactive "p\ncGo back to char: ")
-  (forward-char -1)
-  (if arg
-      (search-backward (char-to-string char) nil nil arg)
-    (search-backward (char-to-string char)))
-  )
-
-(global-set-key (kbd "C-M-z") 'go-back-to-char)
+(global-set-key (kbd "<C-tab>") 'previous-buffer)
+(global-set-key (kbd "<C-S-tab>") 'next-buffer)
 
 
-;;---
+
+;;;_ editing
+;;;_. tab key & indent
+(if (<= emacs-major-version 23) ;; emacs < 23.2
+     (setq tab-always-indent nil)
+   (setq tab-always-indent 'complete)) ;; emacs >= 23.2
+;;(setq tab-always-indent t)
+
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+
+;;;_. parens
+(setq show-paren-mode t)
+
+;;;_. wrap
+(setq-default truncate-lines t)
+(setq-default fill-column 100)
+;;(auto-fill-mode t)
+
+;;;_. changes
+(setq highlight-changes-visibility-initial-state nil)
+(global-highlight-changes-mode t)
+
+(global-set-key (kbd "C-c d") 'diff-buffer-with-file)
+
+
+;;;_. quickly swap lines
 ;; Move line up/down. Stolen from org-mode's M-up/down
 ;; TODO: support region (move region line up/down)
 ;; see also:  (@file :file-name "drag-stuff.el" :to "define-minor-mode drag-stuff-mode")
@@ -102,7 +200,7 @@
       ))
 
 
-;; vi-style join-line
+;;;_. vi-style join-line
 (defun join-line ()
   "Join the following line with current line"
   (interactive)
@@ -110,9 +208,14 @@
 
 (global-set-key (kbd "C-c J") 'join-line)
 
-;;(@* "completion")
+;;;_ completion
+;; Emacs default:
+;;   M-TAB - lisp-complete-symbol(<24)/completion-at-point(v24)
+;;   M-/ - dabbrev-expand
 
-;;-- ido
+(global-set-key (kbd "M-/") 'hippie-expand)
+
+;;;_. ido
 (require 'ido)
 (unless (fboundp 'ido-common-initialization)   ;;workaround for emacs 23.1's bug(?)
   (defun ido-common-initialization ()
@@ -129,7 +232,7 @@
 
 (autoload 'idomenu "idomenu" "Switch to a buffer-local tag from Imenu via Ido." t)
 
-;;-- smex : ido for M-x
+;;;_. smex : ido for M-x
 (if (require 'smex nil t)
     (progn
       (smex-initialize)
@@ -144,7 +247,7 @@
     (icomplete-mode t)))
 
 
-;;-- anything
+;;;_. anything
 (if (and (load "anything" t)
          (load "anything-config" t))
     (progn
@@ -162,15 +265,13 @@
       )
   (message "%s: failed to load `anything'." load-file-name))
 
-;;--- dabbrev 
-(autoload 'dabbrev-expand-multiple "dabbrev-expand-multiple" "dynamic abbrev expansion for multiple selection" t)
-(setq dabbrev-expand-multiple-select-keys '("a" "s" "d" "f" "g" "q" "w" "e" "r" "t"))
-(global-set-key (kbd "C-c /") 'dabbrev-expand-multiple)
 
 ;;-- auto-compelte
 (if (and (load "auto-complete" t)
          (load "auto-complete-config" t))
     (progn
+      (define-key ac-completing-map (kbd "ESC ESC") 'ac-stop)
+      
       (ac-config-default)
       (add-hook 'lisp-interaction-mode 'ac-emacs-lisp-mode-setup)
 
@@ -180,12 +281,15 @@
   (message "%s: failed to load `auto-complete'." load-file-name))
 
 
-;;(@* "viper")
+;;;_ viper
 (if (require 'undo-tree nil 'noerror)
     (progn
       (global-undo-tree-mode t)
       (global-set-key (kbd "C-c C-z") 'undo-tree-undo)
-      (global-set-key (kbd "C-c C-y") 'undo-tree-redo))
+      (global-set-key (kbd "C-c C-y") 'undo-tree-redo)
+
+      (define-key undo-tree-map (kbd "C-/") nil) ;; leave it for completion
+      )
   (message "%s: failed to load `undo-tree'."  load-file-name))
 
 (eval-after-load 'viper
@@ -194,28 +298,10 @@
 (setq viper-expert-level '3)
 (setq viper-inhibit-startup-message 't)
 
-;;(@* "some important third party libraries")
-;;-- buffer-local bookmarks
-(when (load "bm" t)
-    (global-set-key (kbd "<left-fringe> <C-mouse-1>") 'bm-toggle-mouse)
-    (global-set-key (kbd "<left-fringe> <C-mouse-4>") 'bm-previous-mouse)
-    (global-set-key (kbd "<left-fringe> <C-mouse-5>") 'bm-next-mouse))
-;;see also: (@file :file-name "linemark.el" :to "enable-visual-studio-bookmarks")
 
-;;-- tabbar
-;; ide-skel would group buffers into two: editing buffer, emacs buffer
-(load "ide-skel" t)
+;;;_ code folding
 
-;; if you use `ide-ske', don't directly load `tabbar' after `ide-ske'
-;; as this would mess up the tab group definition of `ide-skel'
-(when (or (featurep 'tabbar)
-          (load "tabbar" t))
-  (tabbar-mode t)
-  (global-set-key (kbd "<C-tab>") 'tabbar-forward)
-  (global-set-key (kbd "<C-S-tab>") 'tabbar-backward))
-
-
-;;(@* "code folding")
+;;;_. hideshow
 (autoload 'hideshowvis-enable "hideshowvis" "Add markers to the fringe for regions foldable by `hideshow-mode'." t)
 (autoload 'hideshowvis-minor-mode "hideshowvis" "Will indicate regions foldable with hideshow in the fringe." 'interactive)
 
@@ -229,13 +315,36 @@
 ;(eval-after-load "hideshow"
 ;  (define-key hs-minor-mode-map (kbd "C-+")  'hs-toggle-hiding))
 
+;;;_. outline
 
-;;(@* "some visual effect")
-(autoload 'highlight-symbol-at-point "highlight-symbol" "Toggle highlighting of the symbol at point." t)
-(global-set-key (kbd "<double-down-mouse-1>") 'highlight-symbol-at-point)
+(global-set-key (kbd "<C-M-up>")     'outline-previous-visible-heading)
+(global-set-key (kbd "<C-M-down>")   'outline-next-visible-heading)
+
+(global-set-key (kbd "<C-wheel-up>") 'outline-previous-visible-heading)
+(global-set-key (kbd "<C-wheel-down>") 'outline-next-visible-heading)
+(global-set-key (kbd "<C-mouse-1>") 'outline-toggle-children)
+(global-set-key (kbd "<C-mouse-2>")   'hide-sublevels)
+
+;;;_. allout
+(define-key allout-mode-map (kbd "<C-M-up>")     'allout-previous-visible-heading)
+(define-key allout-mode-map (kbd "<C-M-down>")   'allout-next-visible-heading)
+
+(define-key allout-mode-map (kbd "<C-wheel-up>")   'allout-previous-visible-heading)
+(define-key allout-mode-map (kbd "<C-wheel-down>") 'allout-next-visible-heading)
+(define-key allout-mode-map (kbd "<C-mouse-1>")    'allout-hide-current-subtree)
+(define-key allout-mode-map (kbd "<C-mouse-3>")    'allout-show-current-subtree)
+
+;;;_ some visual effect
+;;;_. bm
+(require 'bm nil t)
+
+(global-set-key (kbd "<left-fringe> <C-mouse-1>")     'bm-toggle-mouse)
+(global-set-key (kbd "<left-fringe> <C-wheel-up>")    'bm-previous-mouse)
+(global-set-key (kbd "<left-fringe> <C-wheel-down>")  'bm-next-mouse)
+(global-set-key (kbd "<left-fringe> <C-mouse-2>")     'bm-show)
 
 
-;;-- linkd: visualize section header & links (to file/man/info/url)
+;;;_. linkd: visualize section header & links (to file/man/info/url)
 (if (require 'linkd nil t)
     (progn
       (let ( (dir (concat (file-name-directory (locate-library "linkd")) "icons")) )
@@ -248,7 +357,20 @@
   (message "%s: failed to load `linkd'." load-file-name))
 
 
-;;(@* "misc")
+;;;_ programming
+(eldoc-mode t)
+
+(define-key goto-map "i" 'idomenu)
+(define-key goto-map "I" 'imenu)
+
+(define-key goto-map "e" 'find-tag)
+
+(define-key goto-map "`" 'flymake-goto-next-error)
+(define-key goto-map "~" 'flymake-goto-prev-error)
+
+(define-key goto-map "d" 'dired-jump) ;;C-x C-j
+
+;;;_ navigations
 (setq rj-column-threshold 100)
 (if (load "recent-jump" t)
     (recent-jump-mode t)
@@ -257,7 +379,26 @@
 (global-set-key (kbd "C-c <") 'recent-jump-backward)
 (global-set-key (kbd "C-c >") 'recent-jump-forward)
 
- ;;FIXME
+
+;;;_ org-mode
+(setq org-CUA-compatible t)
+
+(setq org-completion-use-ido t
+      ;; org-hide-leading-stars t
+      org-use-sub-superscripts nil ;;don't use `_' for subscript
+
+      org-export-with-section-numbers nil ;; no numbers in export headings
+      org-export-with-toc nil ;; no ToC in export
+      org-export-with-author-info nil ;; no author info in export
+      org-export-with-creator-info nil ;; no creator info
+      org-export-htmlize-output-type 'css ;; separate css
+      )
+
+(global-set-key (kbd "C-c l") 'org-store-link)
+(global-set-key (kbd "C-c c") 'org-capture)
+
+
+;;;_ misc
 (autoload 'idle-require-mode "idle-require" "Load unloaded autoload functions when Emacs becomes idle." t)
 ;; (setq idle-require-symbols '(cedet nxml-mode)) ;; <- Specify packages here.
 ;;(idle-require 'my-cua-keys)
@@ -266,7 +407,8 @@
 ;;(idle-require 'my-one-key)   ;; <- Or like this.
 ;;  (idle-require-mode 1)
 
-;;
+
+;; other configurations
 
 (load "~/.emacs.d/conf/my-word-ops" t)
 (load "~/.emacs.d/conf/my-cua-keys" t)
@@ -275,8 +417,8 @@
 ;;(load "my-options-cmds" t) ;;TODO
 (load "~/.emacs.d/conf/my-misc" t)
 (load "~/.emacs.d/conf/my-one-key" t)
-(load "~/.emacs.d/conf/my-mouse" t)
 
+(load "~/.emacs.d/conf/my-mouse" t)
 ;;(load "hyper-key-bindings" t)
 
 

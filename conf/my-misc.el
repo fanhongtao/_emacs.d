@@ -5,29 +5,42 @@
 (global-set-key (kbd "<C-f10> f") 'customize-face)
 (global-set-key (kbd "<C-f10> t") 'customize-themes)
 
+(global-set-key (kbd "<C-f10> d") 'toggle-debug-on-error)
+
 (global-set-key (kbd "<C-10> F") 'menu-set-font)
 
-(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
-(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+(global-set-key (kbd "<mode-line> <C-wheel-up>") 'text-scale-increase)
+(global-set-key (kbd "<mode-line> <C-wheel-down>") 'text-scale-decrease)
 
-;;--- minor modes
+(defun bmz/toggle-show-paren-style ()
+  (interactive)
+  (if (eq show-paren-style 'parenthesis)
+      (setq show-paren-style 'expression)
+    (setq show-parent-style 'parenthesis))
+  (message "show-paren-style switched to %s." show-paren-style))
+
+(global-set-key (kbd "<C-f10> p") 'bmz/toggle-show-paren-style)
+          
+
+;;--- some 3rd-party minor modes
 (global-unset-key (kbd "<f10>"))
 (global-set-key (kbd "<f10> <f10>") 'menu-bar-open)
 
-(global-set-key (kbd "<f10> f") 'auto-fill-mode)
-(global-set-key (kbd "<f10> p") 'show-paren-mode)
-(global-set-key (kbd "<f10> w") 'whitespace-mode)
-(global-set-key (kbd "<f10> h") 'hs-minor-mode)
-(global-set-key (kbd "<f10> o") 'outline-minor-mode)
-(global-set-key (kbd "<f10> v") 'toggle-viper-mode)
-(global-set-key (kbd "<f10> C-w") 'visual-line-mode)
-(global-set-key (kbd "<f10> t") 'toggle-truncate-lines)
-(global-set-key (kbd "<f10> l") 'linum-mode)
+;; (global-set-key (kbd "<f10> c") 'highlight-changes-visible-mode)
+;; (global-set-key (kbd "<f10> f") 'auto-fill-mode)
+;; (global-set-key (kbd "<f10> p") 'show-paren-mode)
+;; (global-set-key (kbd "<f10> w") 'whitespace-mode)
+;; (global-set-key (kbd "<f10> h") 'hs-minor-mode)
+;; (global-set-key (kbd "<f10> o") 'outline-minor-mode)
+;; (global-set-key (kbd "<f10> v") 'toggle-viper-mode)
+;; (global-set-key (kbd "<f10> C-w") 'visual-line-mode)
+;; (global-set-key (kbd "<f10> t") 'toggle-truncate-lines)
+;; (global-set-key (kbd "<f10> l") 'linum-mode)
 
 
 
 ;; 3rd-party modules
-(global-set-key (kbd "<f10> c") 'auto-complete-mode)
+(global-set-key (kbd "<f10> C") 'auto-complete-mode)
 
 (autoload 'highlight-indentation "highlight-indentation" "Toggle highlight indentation." t)
 (autoload 'highlight-parentheses-mode "highlight-parentheses" nil t)
@@ -37,13 +50,17 @@
 (autoload 'drag-stuff-mode "drag-stuff" nil t)
 (autoload 'setnu-mode "setnu" "vi-style line numbers" t)
 
-(global-set-key (kbd "<f10> i") 'highlight-indentation)
+(global-set-key (kbd "<f10> I") 'highlight-indentation)
 (global-set-key (kbd "<f10> P") 'highlight-parentheses-mode)
-(global-set-key (kbd "<f10> h") 'idle-highlight)
-(global-set-key (kbd "<f10> r") 'rainbow-delimiters)
-(global-set-key (kbd "<f10> m") 'visibile-mark-mode)
-(global-set-key (kbd "<f10> d") 'drag-stuff-mode)
-(global-set-key (kbd "<f10> n") 'setnu-mode)
+(global-set-key (kbd "<f10> H") 'idle-highlight)
+(global-set-key (kbd "<f10> R") 'rainbow-delimiters)
+(global-set-key (kbd "<f10> M") 'visibile-mark-mode)
+(global-set-key (kbd "<f10> D") 'drag-stuff-mode)
+(global-set-key (kbd "<f10> N") 'setnu-mode)
+
+
+
+
 
 ;;--- some elisp commands
 (global-set-key (kbd "<f3> f") 'find-function-at-point)
@@ -54,6 +71,7 @@
 (global-set-key (kbd "<f3> C-f") 'ffap-other-window)
 
 
+(global-set-key (kbd "<f12> k")   'find-function-on-key)
 (global-set-key (kbd "<f12> l l") 'load-library)
 (global-set-key (kbd "<f12> l t") 'load-theme)
 
@@ -62,19 +80,110 @@
 (global-set-key (kbd "<f12> e f") 'eval-defun)
 (global-set-key (kbd "<f12> e s") 'eval-sexp)
 
-(defun check-parens+ ()
+(defun bmz/check-parens ()
   (interactive)
   (check-parens)
   (message "%s: OK" (buffer-file-name)))
 
-(define-key emacs-lisp-mode-map (kbd "<M-f9>") 'check-parens+)
+(define-key emacs-lisp-mode-map (kbd "<M-f9>") 'bmz/check-parens)
 
-(defun byte-compile-file+ ()
+(defun bmz/byte-compile-file ()
    (interactive)
-   (byte-compile-file (buffer-file-name)))
+   (let ( (emacs-lisp-mode-hook '()) )
+     (byte-compile-file (buffer-file-name))))
 
-(define-key emacs-lisp-mode-map (kbd "<C-f9>") 'byte-compile-file+)
+(define-key emacs-lisp-mode-map (kbd "<C-f9>") 'bmz/byte-compile-file)
+
       
+(defun load-and-execute (library)
+  "load a library 'foobar' and execute the command with same name (foobar or foobar-mode"
+  (interactive
+   (list (completing-read "Load library: "
+                          (apply-partially 'locate-file-completion-table
+                                           load-path
+                                           (get-load-suffixes)))))
+  (when (load library)
+    (let ( (command (if (fboundp (intern library))
+                        (intern library)
+                      (intern (concat library "-mode")))) )
+      (message "try to execute `%s'" command)
+      (call-interactively command))))
+
+
+;;--- misc keys
+
+(define-key minibuffer-local-map (kbd "ESC ESC") 'minibuffer-keyboard-quit)
+
+(define-key minibuffer-local-map (kbd "<f5>") 'anything-minibuffer-history)
+
+
+
+(global-set-key (kbd "H-a") 'mark-whole-buffer)
+;; H-s
+;; H-d
+;; H-f
+
+(global-set-key (kbd "H-z") 'undo-tree-undo)
+(global-set-key (kbd "H-x") 'kill-region)
+(global-set-key (kbd "H-c") 'kill-ring-save)
+(global-set-key (kbd "H-v") 'cua-paste)
+(global-set-key (kbd "H-b") 'extend-selection)
+
+;; H-q
+(global-set-key (kbd "H-w") 'toggle-truncate-lines)
+(global-set-key (kbd "H-y") 'undo-tree-redo)
+(global-set-key (kbd "H-e") 'kill-whole-line)
+;; H-r
+(global-set-key (kbd "H-t") 'transpose-selections)
+
+(global-set-key (kbd "H-g") 'keyboard-quit)
+
+
+;;;_. misc keys
+(global-set-key (kbd "C-c d") 'diff-buffer-with-file)
+
+(define-key minibuffer-local-map (kbd "ESC ESC") 'minibuffer-keyboard-quit)
+
+(define-key minibuffer-local-map (kbd "<f5>") 'anything-minibuffer-history)
+
+
+(global-set-key (kbd "M-g d") 'dired-jump) ;;C-x C-j
+
+;; make M-z behave more as zap-up-to-char
+(defun zap-up-to-char (arg char)
+    "Kill up to the ARG'th occurence of CHAR, and leave CHAR.
+  The CHAR is replaced and the point is put before CHAR."
+    (interactive "p\ncZap to char: ")
+    (zap-to-char arg char)
+    (insert char)
+    (forward-char -1))
+
+(global-set-key (kbd "M-z") 'zap-up-to-char)
+(defun zap-back-to-char (arg char)
+  (interactive "p\ncBack-zap to char: ")
+  (zap-to-char (- arg) char))
+
+(global-set-key (kbd "ESC M-z") 'zap-back-to-char)
+
+(defun go-to-char (arg char)
+  (interactive "p\ncGo to char: ")
+  (forward-char 1)
+  (if (if arg
+          (search-forward (char-to-string char) nil nil arg)
+        (search-forward (char-to-string char)))
+      (backward-char 1))
+  )
+
+(defun go-back-to-char (arg char)
+  (interactive "p\ncGo back to char: ")
+  (forward-char -1)
+  (if arg
+      (search-backward (char-to-string char) nil nil arg)
+    (search-backward (char-to-string char)))
+  )
+
+(global-set-key (kbd "C-M-z") 'go-back-to-char)
+
 
 ;;--- buffer-local bookmarks
 (ignore-errors
@@ -94,7 +203,7 @@
           (global-set-key (kbd "<f2> l") 'anything-bm-list))
       )
   (if (featurep 'linemark)              ;; linemark.el from CEDET
-      (progn       
+      (progn        
         (define-key global-map (kbd "<f2> t") 'viss-bookmark-toggle)
         (define-key global-map (kbd "<f2> n") 'viss-bookmark-prev-buffer)
         (define-key global-map (kbd "<f2> p") 'viss-bookmark-next-buffer)
@@ -150,6 +259,7 @@
 (global-set-key (kbd "C-c C-s") 'hidesearch)
 (global-set-key (kbd "C-c C-a") 'show-all-invisible)
 
+;;FIXME: anything-occur is better?
 
 ;;---
 (require 'windmove)
@@ -178,11 +288,11 @@
     ad-do-it))
 
 ;;--- list & choose method
-(require 'idomenu "idomenu" t)  
-(require 'eassist "eassist" t)  ;; for `eassist-list-methods'
 
-(defun hkb-select-method()
+(defun bmz/select-method()
   (interactive)
+  (require 'idomenu "idomenu" t)  
+  (require 'eassist "eassist" t)  ;; for `eassist-list-methods'
   (cond
    ( (and (fboundp 'anything-browse-code)
 	  (memq major-mode '(emacs-lisp-mode lisp-interaction-mode python-mode)))
@@ -197,8 +307,8 @@
      (eassist-list-methods) )
    (t (imenu))))
 
-(global-set-key (kbd "C-c C-o") 'hkb-select-method)
-(global-set-key (kbd "<f5> I") 'hkb-select-method)
+(global-set-key (kbd "C-c C-o") 'bmz/select-method)
+(global-set-key (kbd "<f5> I") 'bmz/select-method)
 
 ;;--- extend selection incrementally (ergoemacs-functions.el)
 ;; http://xahlee.org/emacs/syntax_tree_walk.html
@@ -234,17 +344,36 @@ See: `forward-block'"
 (global-set-key (kbd "C-c p") 'backward-block)
 
 ;;--- completion
-;; Emacs default:
-;;   M-TAB - lisp-complete-symbol(<24)/completion-at-point(v24)
-;;   M-/ - dabbrev-expand
 
-;;(if (< emacs-major-version 24)
-;;    (global-set-key (kbd "H-/") 'lisp-complete-symbol)))
-;;(global-set-key (kbd "H-/") 'completion-at-point)
-;;(global-set-key (kbd "H-/") 'hippie-expand)
+;;;_. auto-completion
+(defun ac-expand-filename ()
+  (interactive)
+  (let ( (ac-sources '(ac-source-filename ac-source-files-in-current-dir)) )
+    (call-interactively 'ac-start)))
 
-;;---
-;; opening server files always in a new frame
+;;(global-set-key (kbd "C-, /") 'ac-expand-filename)
+(global-set-key (kbd "C-/") 'ac-expand-filename)
+
+;;;_. dabbrev 
+(autoload 'dabbrev-expand-multiple "dabbrev-expand-multiple" "dynamic abbrev expansion for multiple selection" t)
+(setq dabbrev-expand-multiple-select-keys '("a" "s" "d" "f" "g" "q" "w" "e" "r" "t"))
+(global-set-key (kbd "C-c /") 'dabbrev-expand-multiple)
+
+;;;_. completion-ui
+(when (require 'completion-ui nil t)
+  (global-set-key (kbd "C-, d") 'complete-dabbrev)
+  (global-set-key (kbd "C-, t") 'complete-etags)
+  (global-set-key (kbd "C-, f") 'complete-files)
+  
+  ;;(global-set-key (kbd "C-, s") 'complete-symbol) ;;elisp
+  ;;(global-set-key (kbd "C-, >") 'complete-nxml)
+  ;;(global-set-key (kbd "C-, <") 'complete-nxml)
+  (global-set-key (kbd "C-, $") 'complete-ispell)
+  (if (require 'complete-ui-more-source nil t)
+      (global-set-key (kbd "C-$") 'complete-ispell-lookup)))
+
+;;;_ misc
+;;;_. opening server files always in a new frame
 ;;http://www.emacswiki.org/emacs/EmacsClient#toc21
 
 (add-hook 'server-switch-hook
@@ -253,7 +382,7 @@ See: `forward-block'"
               (bury-buffer)
               (switch-to-buffer-other-frame server-buf))))
 
-;;--- count region
+;;;_. count region
 ;; http://xahlee.org/emacs/elisp_count-region.html
 ;; see also: M-= (M-x count-lines-region)
 (defun count-region (begin end)
@@ -272,19 +401,12 @@ See: `forward-block'"
       (message "Words: %d. Chars: %d." wCnt charCnt)
       )))
 
-;;(@* "tempbuf" *)
-;;(autoload 'turn-on-tempbuf-mode "tempbuf")
-(when (load "tempbuf" t)
-  (add-hook 'dired-mode-hook 'turn-on-tempbuf-mode)
-  (add-hook 'custom-mode-hook 'turn-on-tempbuf-mode)
-  (add-hook 'w3-mode-hook 'turn-on-tempbuf-mode)
-  (add-hook 'Man-mode-hook 'turn-on-tempbuf-mode)
-  (add-hook 'view-mode-hook 'turn-on-tempbuf-mode))
+
 
 
 ;;(@* "org-mode")
-(setq org-CUA-compatible t)
 
+;;FIXME: '<s' template
 (defun org-quote-region (begin end)
   (interactive "r")
   (if (not (and transient-mark-mode mark-active))
@@ -317,3 +439,10 @@ See: `forward-block'"
 
 
 ;;TODO: (@* "cygwin")
+
+;;_ misc
+(require 'menu-bar+ nil t)
+
+(require 'mouse3 nil t)
+
+(require 'second-sel nil t)

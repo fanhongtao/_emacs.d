@@ -9,8 +9,8 @@
 (define-key key-translation-map (kbd "<A-mouse-5>") (kbd "<A-wheel-down>"))
 
 
-(defmacro defun-mouse (function newfunc)
-  '(defun ,newfunc (event)
+(defmacro defun-mouse (newfunc function)
+  `(defun ,newfunc (event)
      (interactive "e")
      (mouse-set-point event)
      (call-interactively ',function)))
@@ -35,14 +35,15 @@
 ;;   (interactive "e")
 ;;   (mouse-set-point event)
 ;;   (call-interactively 'outline-toggle-children))
-(defun-mouse outline-toggle-children outline-toggle-children-by-mouse)
+(defun-mouse outline-toggle-children-by-mouse outline-toggle-children)
+
 (global-set-key (kbd "<C-wheel-up>")   'outline-previous-visible-heading)
 (global-set-key (kbd "<C-wheel-down>") 'outline-next-visible-heading)
+
 (global-set-key (kbd "<C-mouse-2>")    'hide-sublevels)
 
 
-;;-- Ctrl on <left-fringe> 
-
+;;-- Ctrl on <left-fringe> :  buffer-local bookmarks
 (global-set-key (kbd "<left-fringe> <C-mouse-1>")    'outline-toggle-children-by-mouse)
 (global-set-key (kbd "<left-fringe> <C-mouse-2>") 'show-all)
 

@@ -1,4 +1,4 @@
-;;; cowsay-fortune.el -- insert a fortune cookie with external fortune/cowsay program
+;;; fortune-cmd.el -- insert/show a fortune cookie with external fortune program
 
 
 ;; Copyright (C) 2010-2011 BaManzi
@@ -15,8 +15,7 @@
 ;; You must have `fortune' program & data files installed.
 ;; ( http://packages.debian.org/wheezy/fortune-mod )
 
-;; (@* "fortune")
-;; M-x fortune-echo  	;; show a fortune cookie
+;; M-x fortune-echo  	;; show a fortune cookie in echo area
 ;; M-x insert-fortune   ;; insert a fortune cookie into current buffer
 ;;
 ;; M-x fortune-idle-start
@@ -25,19 +24,6 @@
 ;; M-x fortune-idle-stop
 ;;                      ;; Stop the timer started by `idle-fortune-start'
 ;;
-;; (@* "cowsay")
-;; You must have `cowsay' program installed to use the following commands:
-;; (cowsay: http://www.nog.net/~tony/warez/cowsay.shtml)
-;;
-;; M-x cowsay-quote-region
-;;                     ;; quote the region with a cowsay figure
-;;
-;; (@* "cowsay + fortune")
-;; M-x insert-cowsay-fortune
-;;                     ;; insert a fortune cookie, quoted with a cowsay figure
-;; M-x insert-random-cowsay-fortune
-;;                     ;; similar to `insert-cowsay-fortune', but use random
-;;                     ;; cowsay figure
 ;; M-x ido-insert-cowsay-fortune
 ;;                     ;; similar to `insert-cowsay-fortune', but you can choose
 ;;                     ;; which cowsay figure and which fortune database to use.
@@ -50,7 +36,7 @@
 ;; you can use `run-with-idle-time' to run (browse-url "http://fortunemod.com/")
 
 
-;; Sample output of `insert-cowsay-fortune':
+;; Sample output of `insert-fortune':
 ;; _________________________________________
 ;; / "What do you mean with disappear - it's \
 ;; | completely closed down or disappeared   |
@@ -66,21 +52,13 @@
 
 ;;; Code:
 
+(require 'cowsay-cmd nil t)
+
 (defcustom fortune-prg "/usr/games/fortune"
   "Program for `insert-fortune' and `insert-cowsay-fortune'")
 
 (defcustom fortune-data-dir "/usr/share/games/fortunes"
   "Data dir storing fortunes cookies")
-
-(defcustom cowsay-prg "/usr/games/cowsay"
-  "Program for `cowsay-quote-region' and `insert-cowsay-fortune'")
-
-(defcustom cowsay-prg-extra-args "-W 78"
-  "Extra arguments passed to `cowsay' program.")
-
-(defcustom cowsay-data-dir "/usr/share/cowsay/cows"
-  "Data dir storing cowsay figures")
-
 
 
 (defun call-fortune (fortune-file)
@@ -95,7 +73,6 @@
   (interactive "sFortune: ")
   (message (call-fortune fortune-file)))
 
-;;;###autoload
 (defun insert-fortune (fortune-file)
   "insert a fortune cookie to current buffer."
   (interactive "sFortune: ")
@@ -116,46 +93,19 @@
     (insert-string "\n--\n")
     (insert-string (call-fortune fortune-file))))
 
-;;-- cowsay
-(defun call-cowsay (msg &optional cowfile)
-  (shell-command-to-string (format "%s %s %s %s"
-				   cowsay-prg
-                   cowsay-prg-extra-args
-				   (if (< 0 (length cowfile))
-				       (concat " -f " cowfile)
-				     " " )
-				   (shell-quote-argument msg))))
-
 
 ;;;###autoload
-(defun cowsay-quote-region (begin end)
-  "Quote a region with a cowsay figure."
-  (interactive "r")
-  (shell-command-on-region begin end cowsay-prg))
-
-
-;;-- fortune + cowsay
-;;;###autoload
-(defun insert-cowsay-fortune (cowfile fortune-file)
+(defun insert-fortune-with-cowsay (cowfile fortune-file)
   "insert a fortune cookie, quoted by a 'cow'."
   (interactive "sCowfile: \nsFortune: ")
   (insert-string "\n")
   (insert-string (call-cowsay (call-fortune fortune-file) cowfile)))
 
 
-(defun random-cowfile ()
-  (let ( (files (directory-files cowsay-data-dir nil ".*.cow")) )
-	 (nth (random (length files)) files)))
 
 ;;;###autoload
-(defun insert-random-cowsay-fortune (&optional fortune-file)
-  "insert a fortune cookie, quoted by a 'cow'."
-  (interactive)
-  (insert-cowsay-fortune (random-cowfile) ""))
-
-
-;;;###autoload
-(defun ido-insert-cowsay-fortune (&optional cowfile fortune-file)
+;;; FIXME: add (random) support
+(defun ido-insert-fortune-with-cowsay (&optional cowfile fortune-file)
   "Insert a fortune cookie, quoted by a 'cowsay' figure.
 
 This one would use `ido' to let user choose the cowfile and the fortune cookie file."
@@ -186,6 +136,19 @@ This one would use `ido' to let user choose the cowfile and the fortune cookie f
 If you have no `cowsay', you can turn it off."
   :type 'boolean)
 
+
+(defvar fortune-cmd-mode-map
+  (let ( (map (make-sparse-keymap)) )
+    (define-key map (kbd "SPC") 'fortune-show)
+    map)
+  "Keymap for `fortune-cmd-mode'.")
+
+(define-derived-mode fortune-cmd-mode nil "fortune"
+  "Major mode for displaying fortune cookie.
+\\{fortune-cmd-mode-map}"
+  (setq buffer-read-only t))
+
+
 ;;;###autoload
 (defun fortune-show ()
   "Show a fortune cookie in the bottom-est window."
@@ -198,13 +161,15 @@ If you have no `cowsay', you can turn it off."
       (with-selected-window win
         (when (get-buffer-create "*fortune*")
           (with-current-buffer "*fortune*"
-            (kill-region (point-min) (point-max))
-            (insert-string "--\n")
+            (setq buffer-read-only nil)
+            (erase-buffer)
+            (insert-string "(Press SPC to show another cookie.)\n--\n")
             (if fortune-show-use-cowsay
                 (insert-cowsay-fortune "" "")
               (insert-fortune "")))
           (switch-to-buffer "*fortune*")
-          (beginning-of-buffer))))
+          (beginning-of-buffer)
+          (fortune-cmd-mode) )))
     ))
       
 
