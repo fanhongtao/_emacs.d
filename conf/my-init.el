@@ -1,5 +1,9 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 
+(unless (fboundp 'idle-require)
+  (defun idle-require (feature &optional file noerror)
+    (require feature)))
+
 ;;;_ gui options
 
 (if (fboundp 'tool-bar-mode)
@@ -14,6 +18,7 @@
     (set-scroll-bar-mode 'right))
 
 
+;;;_ windows
 (setq winner-dont-bind-my-keys t)
 (winner-mode t)
 ;;(global-set-key (kbd "<f11> C-z") 'winner-undo)
@@ -32,6 +37,10 @@
   (global-set-key (kbd "<C-S-tab>") 'tabbar-backward))
 
 ;;;_ files & buffers
+(global-set-key (kbd "<C-tab>") 'previous-buffer)
+(global-set-key (kbd "<C-S-tab>") 'next-buffer)
+
+(define-key goto-map "d" 'dired-jump) ;;C-x C-j
 
 ;;;_. recentf
 (require 'recentf)
@@ -129,27 +138,17 @@
 ;;(setq cua-rectangle-modifier-key 'hyper)  ;;leave C-RET
 (cua-mode)
 
+(global-set-key (kbd "C-c RET") 'cua-set-rectangle-mark)
 
 ;;;_. misc keys
 
 (global-set-key (kbd "RET") 'newline-and-indent)
 (global-set-key (kbd "C-j") 'newline)
 
+;;;_ editing
 (global-set-key (kbd "C-=") 'align-regexp)
 
 
-
-(global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
-
-(global-set-key (kbd "C-c C-w") 'toggle-truncate-lines)
-(global-set-key (kbd "C-c RET") 'cua-set-rectangle-mark)
-
-(global-set-key (kbd "<C-tab>") 'previous-buffer)
-(global-set-key (kbd "<C-S-tab>") 'next-buffer)
-
-
-
-;;;_ editing
 ;;;_. tab key & indent
 (if (<= emacs-major-version 23) ;; emacs < 23.2
      (setq tab-always-indent nil)
@@ -167,12 +166,13 @@
 (setq-default fill-column 100)
 ;;(auto-fill-mode t)
 
+(global-set-key (kbd "C-c C-w") 'toggle-truncate-lines)
+
 ;;;_. changes
 (setq highlight-changes-visibility-initial-state nil)
 (global-highlight-changes-mode t)
 
 (global-set-key (kbd "C-c d") 'diff-buffer-with-file)
-
 
 ;;;_. quickly swap lines
 ;; Move line up/down. Stolen from org-mode's M-up/down
@@ -199,7 +199,6 @@
       (global-set-key (kbd "<M-down>") 'swap-line-down)
       ))
 
-
 ;;;_. vi-style join-line
 (defun join-line ()
   "Join the following line with current line"
@@ -207,6 +206,7 @@
   (delete-indentation 1))
 
 (global-set-key (kbd "C-c J") 'join-line)
+
 
 ;;;_ completion
 ;; Emacs default:
@@ -292,7 +292,7 @@
       )
   (message "%s: failed to load `undo-tree'."  load-file-name))
 
-(eval-after-load 'viper
+(eval-after-load "viper"
   '(require 'vimpulse))
 
 (setq viper-expert-level '3)
@@ -320,23 +320,43 @@
 (global-set-key (kbd "<C-M-up>")     'outline-previous-visible-heading)
 (global-set-key (kbd "<C-M-down>")   'outline-next-visible-heading)
 
+(global-set-key (kbd "C-c <up>")     'outline-previous-visible-heading)
+(global-set-key (kbd "C-c <down>")   'outline-next-visible-heading)
+
 (global-set-key (kbd "<C-wheel-up>") 'outline-previous-visible-heading)
 (global-set-key (kbd "<C-wheel-down>") 'outline-next-visible-heading)
 (global-set-key (kbd "<C-mouse-1>") 'outline-toggle-children)
 (global-set-key (kbd "<C-mouse-2>")   'hide-sublevels)
 
 ;;;_. allout
-(define-key allout-mode-map (kbd "<C-M-up>")     'allout-previous-visible-heading)
-(define-key allout-mode-map (kbd "<C-M-down>")   'allout-next-visible-heading)
+(eval-after-load "allout"
+  '(progn
+     (define-key allout-mode-map (kbd "<C-M-up>")     'allout-previous-visible-heading)
+     (define-key allout-mode-map (kbd "<C-M-down>")   'allout-next-visible-heading)
 
-(define-key allout-mode-map (kbd "<C-wheel-up>")   'allout-previous-visible-heading)
-(define-key allout-mode-map (kbd "<C-wheel-down>") 'allout-next-visible-heading)
-(define-key allout-mode-map (kbd "<C-mouse-1>")    'allout-hide-current-subtree)
-(define-key allout-mode-map (kbd "<C-mouse-3>")    'allout-show-current-subtree)
+     (define-key allout-mode-map (kbd "<C-wheel-up>")   'allout-previous-visible-heading)
+     (define-key allout-mode-map (kbd "<C-wheel-down>") 'allout-next-visible-heading)
+     (define-key allout-mode-map (kbd "<C-mouse-1>")    'allout-hide-current-subtree)
+     (define-key allout-mode-map (kbd "<C-mouse-3>")    'allout-show-current-subtree)
+     ))
+
 
 ;;;_ some visual effect
+;;;_. highlight-symbol
+(idle-require 'highlight-symbol)
+
+(global-set-key (kbd "C-c j>")          'highlight-symbol-at-point)
+(define-key search-map (kbd "j")        'highlight-symbol-at-point)
+(define-key search-map (kbd "<up>")   'highlight-symbol-prev)
+(define-key search-map (kbd "<down") 'highlight-symbol-next)
+
+(global-set-key (kbd "<double-mouse-1>")  'highlight-symbol-at-point)
+(global-set-key (kbd "<S-wheel-up>")      'highlight-symbol-prev)
+(global-set-key (kbd "<S-wheel-down>")    'highlight-symbol-next)
+
 ;;;_. bm
-(require 'bm nil t)
+(idle-require 'bm)
+
 
 (global-set-key (kbd "<left-fringe> <C-mouse-1>")     'bm-toggle-mouse)
 (global-set-key (kbd "<left-fringe> <C-wheel-up>")    'bm-previous-mouse)
@@ -358,7 +378,11 @@
 
 
 ;;;_ programming
-(eldoc-mode t)
+(add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
+
+(which-func-mode t)
+
+(global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
 
 (define-key goto-map "i" 'idomenu)
 (define-key goto-map "I" 'imenu)
@@ -368,7 +392,6 @@
 (define-key goto-map "`" 'flymake-goto-next-error)
 (define-key goto-map "~" 'flymake-goto-prev-error)
 
-(define-key goto-map "d" 'dired-jump) ;;C-x C-j
 
 ;;;_ navigations
 (setq rj-column-threshold 100)
@@ -398,28 +421,6 @@
 (global-set-key (kbd "C-c c") 'org-capture)
 
 
-;;;_ misc
-(autoload 'idle-require-mode "idle-require" "Load unloaded autoload functions when Emacs becomes idle." t)
-;; (setq idle-require-symbols '(cedet nxml-mode)) ;; <- Specify packages here.
-;;(idle-require 'my-cua-keys)
-;;(idle-require 'my-win-fns)
-;;(idle-require 'my-misc)
-;;(idle-require 'my-one-key)   ;; <- Or like this.
-;;  (idle-require-mode 1)
-
-
-;; other configurations
-
-(load "~/.emacs.d/conf/my-word-ops" t)
-(load "~/.emacs.d/conf/my-cua-keys" t)
-(load "~/.emacs.d/conf/my-vi-keys" t)
-(load "~/.emacs.d/conf/my-win-fns" t)
-;;(load "my-options-cmds" t) ;;TODO
-(load "~/.emacs.d/conf/my-misc" t)
-(load "~/.emacs.d/conf/my-one-key" t)
-
-(load "~/.emacs.d/conf/my-mouse" t)
-;;(load "hyper-key-bindings" t)
 
 
 

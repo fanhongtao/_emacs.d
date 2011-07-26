@@ -29,72 +29,6 @@
 ;;}}}
 
 
-;;{{{ some basic settings
-(fset 'yes-or-no-p 'y-or-n-p)
-
-(if (fboundp 'tool-bar-mode)
-    (tool-bar-mode -1))
-
-(setq frame-title-format '("%b (%m) - Emacs "
-			   (:eval emacs-version)))
-
-
-(when (eq window-system 'x)
-    (setq x-select-enable-clipboard t)
-;;  (setq x-select-enable-primary t)
-    (set-scroll-bar-mode 'right))
-
-
-(setq show-paren-mode t)
-
-(setq-default truncate-lines t)
-(setq-default fill-column 100)
-;;(auto-fill-mode t)
-
-(require 'recentf)
-(setq recentf-max-saved-items 100)
-
-(setq recentf-menu-path '("File"))
-(recentf-mode t)
-;;}}}
-
-;;{{{ key bindings
-(setq shift-select-mode t)
-(delete-selection-mode t)
-
-(setq cua-enable-cua-keys nil)
-;;(setq cua-rectangle-modifier-key 'hyper)  ;;leave C-RET
-(cua-mode)
-
-
-
-(if (<= emacs-major-version 23) ;; emacs < 23.2
-     (setq tab-always-indent nil)
-   (setq tab-always-indent 'complete)) ;; emacs >= 23.2
-;;(setq tab-always-indent t)
-
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 4)
-
-
-
-(global-set-key (kbd "RET") 'indent-new-comment-line)
-(global-set-key (kbd "C-j") 'newline)
-
-(global-set-key (kbd "C-=") 'align-regexp)
-
-(global-set-key (kbd "M-/") 'hippie-expand)
-
-(global-set-key (kbd "C-c ;") 'comment-or-uncomment-region)
-
-(global-set-key (kbd "C-c C-w") 'toggle-truncate-lines)
-(global-set-key (kbd "C-c RET") 'cua-set-rectangle-mark)
-
-(global-set-key (kbd "<C-tab>") 'previous-buffer)
-(global-set-key (kbd "<C-S-tab>") 'next-buffer)
-;;}}}
-
-
 
 (load "~/.emacs.d/conf/my-init.el")
 
@@ -110,3 +44,32 @@
             "e:/emacs/site-lisp/win32_"
             ))
     (load-file generated-autoload-file)))
+
+
+;;;_ misc
+(unless (load "idle-require" t)
+  ;; fail-safe for `idle-quire'
+  (defun idle-require (feature &optional file noerror)
+    (require feature)))
+
+;; (setq idle-require-symbols '(cedet nxml-mode)) ;; <- Specify packages here.
+;;(idle-require 'foobar)
+
+(
+
+;; other configurations
+
+(load "~/.emacs.d/conf/my-word-ops" t)
+(load "~/.emacs.d/conf/my-cua-keys" t)
+(load "~/.emacs.d/conf/my-vi-keys" t)
+(load "~/.emacs.d/conf/my-win-fns" t)
+;;(load "my-options-cmds" t) ;;TODO
+(load "~/.emacs.d/conf/my-misc" t)
+(load "~/.emacs.d/conf/my-one-key" t)
+
+(load "~/.emacs.d/conf/my-mouse" t)
+
+
+(if (fboundp 'idle-require-mode)
+  (idle-require-mode t))
+

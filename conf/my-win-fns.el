@@ -229,7 +229,7 @@ an error is signaled."
 
 (defun split-root-window-vertially ()
   (interactive)
-  (split-root-window nil nil))k
+  (split-root-window nil nil))
 
 (defun split-root-window-horizontally ()
   (interactive)
@@ -239,8 +239,6 @@ an error is signaled."
 
 
 (defun init-win-fns-keys (map)
-
-  (let ( (map my-win-fns-keymap) )
     ;; resizing
     ;(define-key map (kbd "}") 'enlarge-window)
     (define-key map (kbd "}") 'enlarge-window-more)
@@ -277,7 +275,7 @@ an error is signaled."
     (define-key map (kbd "<tab>") 'other-window)
     (define-key map (kbd "<S-tab>") 'other-window-backward)
 
-    (define-key map (kbd "D")   'dired-jump-other-window)
+;;    (define-key map (kbd "D")   'dired-jump-other-window)
     
     (define-key map (kbd "g w") 'ido-jump-to-window)
     (define-key map (kbd "g t") 'ido-jump-to-tab)

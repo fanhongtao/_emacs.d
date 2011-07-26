@@ -59,9 +59,6 @@
 (global-set-key (kbd "<f10> N") 'setnu-mode)
 
 
-
-
-
 ;;--- some elisp commands
 (global-set-key (kbd "<f3> f") 'find-function-at-point)
 (global-set-key (kbd "<f3> F") 'find-function)
@@ -110,12 +107,7 @@
       (call-interactively command))))
 
 
-;;--- misc keys
-
-(define-key minibuffer-local-map (kbd "ESC ESC") 'minibuffer-keyboard-quit)
-
-(define-key minibuffer-local-map (kbd "<f5>") 'anything-minibuffer-history)
-
+;;;--- misc keys
 
 
 (global-set-key (kbd "H-a") 'mark-whole-buffer)
@@ -127,7 +119,16 @@
 (global-set-key (kbd "H-x") 'kill-region)
 (global-set-key (kbd "H-c") 'kill-ring-save)
 (global-set-key (kbd "H-v") 'cua-paste)
-(global-set-key (kbd "H-b") 'extend-selection)
+
+(defun select-parened-expression ()
+  (interactive)
+  (if (re-search-backward "[({]")
+      (set-mark (save-excursion
+                 (goto-match-paren 1)
+                 (point)
+                 ))))
+
+(global-set-key (kbd "H-b") 'select-parened-expression)
 
 ;; H-q
 (global-set-key (kbd "H-w") 'toggle-truncate-lines)
@@ -138,16 +139,19 @@
 
 (global-set-key (kbd "H-g") 'keyboard-quit)
 
+(global-set-key (kbd "<H-up>")     'outline-previous-visible-heading)
+(global-set-key (kbd "<H-down>")   'outline-next-visible-heading)
 
 ;;;_. misc keys
-(global-set-key (kbd "C-c d") 'diff-buffer-with-file)
 
 (define-key minibuffer-local-map (kbd "ESC ESC") 'minibuffer-keyboard-quit)
 
 (define-key minibuffer-local-map (kbd "<f5>") 'anything-minibuffer-history)
 
+(global-set-key (kbd "C-c d") 'diff-buffer-with-file)
 
 (global-set-key (kbd "M-g d") 'dired-jump) ;;C-x C-j
+
 
 ;; make M-z behave more as zap-up-to-char
 (defun zap-up-to-char (arg char)
@@ -262,9 +266,9 @@
 ;;FIXME: anything-occur is better?
 
 ;;---
-(require 'windmove)
 (defun goto-scratch-buffer-on-botton-window ()
   (interactive)
+  (require 'windmove)
   (let ( (win (selected-window)) )
     (while (windmove-find-other-window 'down nil win)
       (setq win (windmove-find-other-window 'down nil win)))
@@ -360,17 +364,19 @@ See: `forward-block'"
 (global-set-key (kbd "C-c /") 'dabbrev-expand-multiple)
 
 ;;;_. completion-ui
-(when (require 'completion-ui nil t)
-  (global-set-key (kbd "C-, d") 'complete-dabbrev)
-  (global-set-key (kbd "C-, t") 'complete-etags)
-  (global-set-key (kbd "C-, f") 'complete-files)
+(idle-require 'completion-ui)
+(global-set-key (kbd "C-, d") 'complete-dabbrev)
+(global-set-key (kbd "C-, t") 'complete-etags)
+(global-set-key (kbd "C-, f") 'complete-files)
   
-  ;;(global-set-key (kbd "C-, s") 'complete-symbol) ;;elisp
-  ;;(global-set-key (kbd "C-, >") 'complete-nxml)
-  ;;(global-set-key (kbd "C-, <") 'complete-nxml)
-  (global-set-key (kbd "C-, $") 'complete-ispell)
-  (if (require 'complete-ui-more-source nil t)
-      (global-set-key (kbd "C-$") 'complete-ispell-lookup)))
+;;(global-set-key (kbd "C-, s") 'complete-symbol) ;;elisp
+;;(global-set-key (kbd "C-, >") 'complete-nxml)
+;;(global-set-key (kbd "C-, <") 'complete-nxml)
+(global-set-key (kbd "C-, $") 'complete-ispell)
+
+(idle-require 'complete-ui-more-source)
+(global-set-key (kbd "C-, $") 'complete-ispell-lookup)
+
 
 ;;;_ misc
 ;;;_. opening server files always in a new frame
@@ -441,8 +447,8 @@ See: `forward-block'"
 ;;TODO: (@* "cygwin")
 
 ;;_ misc
-(require 'menu-bar+ nil t)
+(idle-require 'menu-bar+)
 
-(require 'mouse3 nil t)
+(idle-require 'mouse3)
 
-(require 'second-sel nil t)
+(idle-require 'second-sel)
