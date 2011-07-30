@@ -17,7 +17,7 @@
   (package-initialize))
 
 (when (file-exists-p "~/.emacs.d/site-lisp/site-start.el")
-  (load "~/.demacs.d/site-lisp/site-start.el"))
+  (load "~/.emacs.d/site-lisp/site-start.el"))
 
 
 ;; leave customization & os/distro/installation-specific settings to another file
